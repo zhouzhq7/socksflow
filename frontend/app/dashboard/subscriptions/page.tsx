@@ -116,9 +116,12 @@ export default function SubscriptionsPage() {
   // 偏好设置表单状态
   const [preferences, setPreferences] = useState<DeliveryPreferences>({});
 
-  // 加载订阅列表
+  // 加载订阅列表 - 延迟执行等待 hydration
   useEffect(() => {
-    fetchSubscriptions();
+    const timer = setTimeout(() => {
+      fetchSubscriptions();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [fetchSubscriptions]);
 
   // 如果有id参数，展开对应的订阅

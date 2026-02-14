@@ -56,22 +56,27 @@ export default function DashboardPage() {
 
   const activeSubscription = getActiveSubscription();
 
-  // 加载数据
+  // 加载数据 - 确保只在客户端执行
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        await fetchSubscriptions();
-        
-        // 获取最近订单
-        const response = await orderApi.getOrders({ limit: 3 });
-        setOrders(response.data?.slice(0, 3) || []);
-      } catch (error) {
-        console.error("加载数据失败:", error);
-      } finally {
-        setOrdersLoading(false);
-      }
-    };
-    loadData();
+    // 延迟加载，等待 hydration 完成
+    const timer = setTimeout(() => {
+      const loadData = async () => {
+        try {
+          await fetchSubscriptions();
+          
+          // 获取最近订单
+          const response = await orderApi.getOrders({ limit: 3 });
+          setOrders(response.data?.slice(0, 3) || []);
+        } catch (error) {
+          console.error("加载数据失败:", error);
+        } finally {
+          setOrdersLoading(false);
+        }
+      };
+      loadData();
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [fetchSubscriptions]);
 
   // 格式化日期

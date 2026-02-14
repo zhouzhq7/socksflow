@@ -125,19 +125,22 @@ export default function OrdersPage() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  // 加载订单列表
+  // 加载订单列表 - 延迟执行等待 hydration
   useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        const response = await orderApi.getOrders();
-        setOrders(response.data || []);
-      } catch (error) {
-        console.error("加载订单失败:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadOrders();
+    const timer = setTimeout(() => {
+      const loadOrders = async () => {
+        try {
+          const response = await orderApi.getOrders();
+          setOrders(response.data || []);
+        } catch (error) {
+          console.error("加载订单失败:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadOrders();
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // 查看订单详情
