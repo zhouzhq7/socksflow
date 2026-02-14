@@ -102,17 +102,19 @@ export default function AuthNav() {
 
   return (
     <div className="flex items-center gap-3">
-      <Link
-        href="/auth/login"
+      <Button
+        variant="ghost"
+        onClick={() => router.push("/auth/login")}
         className="text-slate-600 hover:text-slate-900 transition-colors font-medium"
       >
         登录
-      </Link>
-      <Link href="/auth/register">
-        <Button className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-5">
-          注册
-        </Button>
-      </Link>
+      </Button>
+      <Button
+        onClick={() => router.push("/auth/register")}
+        className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-5"
+      >
+        注册
+      </Button>
     </div>
   );
 }
