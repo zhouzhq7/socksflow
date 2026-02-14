@@ -125,9 +125,16 @@ export default function OrdersPage() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  // 加载订单列表 - 延迟执行等待 hydration
+  // 加载订单列表 - 延迟执行等待 hydration 和认证就绪
   useEffect(() => {
     const timer = setTimeout(() => {
+      // 检查是否有 token
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       const loadOrders = async () => {
         try {
           const response = await orderApi.getOrders();
@@ -139,7 +146,7 @@ export default function OrdersPage() {
         }
       };
       loadOrders();
-    }, 100);
+    }, 300);
     return () => clearTimeout(timer);
   }, []);
 

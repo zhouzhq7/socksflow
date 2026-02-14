@@ -56,11 +56,19 @@ export default function DashboardPage() {
 
   const activeSubscription = getActiveSubscription();
 
-  // 加载数据 - 确保只在客户端执行
+  // 加载数据 - 确保只在客户端执行且认证就绪
   useEffect(() => {
-    // 延迟加载，等待 hydration 完成
+    // 等待 hydration 和认证状态恢复
     const timer = setTimeout(() => {
       const loadData = async () => {
+        // 检查是否有 token
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          console.log("未找到 token，跳过数据加载");
+          setOrdersLoading(false);
+          return;
+        }
+
         try {
           await fetchSubscriptions();
           
@@ -74,7 +82,7 @@ export default function DashboardPage() {
         }
       };
       loadData();
-    }, 100);
+    }, 300); // 增加延迟确保 token 已恢复
 
     return () => clearTimeout(timer);
   }, [fetchSubscriptions]);

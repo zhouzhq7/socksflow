@@ -116,11 +116,15 @@ export default function SubscriptionsPage() {
   // 偏好设置表单状态
   const [preferences, setPreferences] = useState<DeliveryPreferences>({});
 
-  // 加载订阅列表 - 延迟执行等待 hydration
+  // 加载订阅列表 - 延迟执行等待 hydration 和认证就绪
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchSubscriptions();
-    }, 100);
+      // 检查是否有 token
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        fetchSubscriptions();
+      }
+    }, 300);
     return () => clearTimeout(timer);
   }, [fetchSubscriptions]);
 
