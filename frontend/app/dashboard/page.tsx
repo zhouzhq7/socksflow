@@ -73,7 +73,7 @@ export default function DashboardPage() {
           await fetchSubscriptions();
           
           // 获取最近订单
-          const response = await orderApi.getOrders({ limit: 3 });
+          const response = await orderApi.getOrders();
           setOrders(response.data?.slice(0, 3) || []);
         } catch (error) {
           console.error("加载数据失败:", error);

@@ -88,9 +88,18 @@ const frequencyOptions = [
   { value: "quarterly", label: "季度配送" },
 ];
 
+// 订阅方案配置
+const planConfigs = [
+  { code: "basic", name: "基础盒", price: 29, pairs: 2, description: "每月2双基础棉袜" },
+  { code: "standard", name: "标准盒", price: 49, pairs: 3, description: "每月3双精选袜子组合" },
+  { code: "premium", name: "高级盒", price: 89, pairs: 5, description: "每月5双高端袜子组合" },
+];
+
 export default function SubscriptionsPage() {
   const searchParams = useSearchParams();
   const subscriptionId = searchParams.get("id");
+  const createParam = searchParams.get("create");
+  const planParam = searchParams.get("plan");
   
   const {
     subscriptions,
@@ -98,6 +107,7 @@ export default function SubscriptionsPage() {
     loading,
     fetchSubscriptions,
     fetchSubscription,
+    createSubscription,
     pauseSubscription,
     resumeSubscription,
     cancelSubscription,
@@ -107,6 +117,8 @@ export default function SubscriptionsPage() {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(0);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
     type: "pause" | "resume" | "cancel";
@@ -115,6 +127,12 @@ export default function SubscriptionsPage() {
 
   // 偏好设置表单状态
   const [preferences, setPreferences] = useState<DeliveryPreferences>({});
+  
+  // 创建订阅表单状态
+  const [createPreferences, setCreatePreferences] = useState<DeliveryPreferences>({
+    frequency: "monthly",
+    size: "M",
+  });
 
   // 加载订阅列表 - 延迟执行等待 hydration 和认证就绪
   useEffect(() => {
@@ -135,6 +153,17 @@ export default function SubscriptionsPage() {
       fetchSubscription(subscriptionId);
     }
   }, [subscriptionId, fetchSubscription]);
+
+  // 如果有create参数，打开创建弹窗
+  useEffect(() => {
+    if (createParam === "true") {
+      const planIdx = planParam ? parseInt(planParam, 10) : 0;
+      if (!isNaN(planIdx) && planIdx >= 0 && planIdx < planConfigs.length) {
+        setSelectedPlan(planIdx);
+      }
+      setCreateOpen(true);
+    }
+  }, [createParam, planParam]);
 
   // 展开/折叠订阅详情
   const toggleExpand = async (subscription: Subscription) => {
@@ -199,6 +228,14 @@ export default function SubscriptionsPage() {
       style: "currency",
       currency: currency,
     }).format(price);
+  };
+
+  // 创建订阅
+  const handleCreateSubscription = async () => {
+    const plan = planConfigs[selectedPlan];
+    await createSubscription(plan.code, createPreferences);
+    setCreateOpen(false);
+    setCreatePreferences({ frequency: "monthly", size: "M" });
   };
 
   return (
@@ -405,13 +442,144 @@ export default function SubscriptionsPage() {
             <p className="mb-6 max-w-md text-center text-sm text-slate-500">
               您还没有创建任何订阅方案。创建订阅后，您将每月收到精心挑选的袜子配送。
             </p>
-            <Button className="bg-amber-600 hover:bg-amber-700">
+            <Button 
+              className="bg-amber-600 hover:bg-amber-700"
+              onClick={() => setCreateOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               创建订阅
             </Button>
           </CardContent>
         </Card>
       )}
+
+      {/* 创建订阅弹窗 */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>创建新订阅</DialogTitle>
+            <DialogDescription>
+              选择适合您的订阅方案，开始享受优质袜子配送服务
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            {/* 方案选择 */}
+            <div className="grid gap-3">
+              <Label>选择方案</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {planConfigs.map((plan, idx) => (
+                  <button
+                    key={plan.code}
+                    onClick={() => setSelectedPlan(idx)}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      selectedPlan === idx
+                        ? "border-amber-500 bg-amber-50"
+                        : "border-slate-200 hover:border-amber-300"
+                    }`}
+                  >
+                    <div className="font-bold text-slate-900">{plan.name}</div>
+                    <div className="text-amber-600 font-bold">¥{plan.price}/月</div>
+                    <div className="text-xs text-slate-500 mt-1">{plan.pairs}双/月</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 选中的方案详情 */}
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <div className="font-medium text-slate-900 mb-1">
+                {planConfigs[selectedPlan].name}
+              </div>
+              <p className="text-sm text-slate-600">
+                {planConfigs[selectedPlan].description}
+              </p>
+            </div>
+
+            {/* 配送频率 */}
+            <div className="grid gap-2">
+              <Label htmlFor="create-frequency">配送频率</Label>
+              <Select
+                value={createPreferences.frequency || "monthly"}
+                onValueChange={(value) =>
+                  setCreatePreferences({ ...createPreferences, frequency: value as DeliveryPreferences["frequency"] })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择配送频率" />
+                </SelectTrigger>
+                <SelectContent>
+                  {frequencyOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 尺码 */}
+            <div className="grid gap-2">
+              <Label htmlFor="create-size">默认尺码</Label>
+              <Select
+                value={createPreferences.size || "M"}
+                onValueChange={(value) => setCreatePreferences({ ...createPreferences, size: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择尺码" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="S">S (35-37)</SelectItem>
+                  <SelectItem value="M">M (38-40)</SelectItem>
+                  <SelectItem value="L">L (41-43)</SelectItem>
+                  <SelectItem value="XL">XL (44-46)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 备注 */}
+            <div className="grid gap-2">
+              <Label htmlFor="create-note">偏好备注（可选）</Label>
+              <Textarea
+                id="create-note"
+                placeholder="例如：喜欢运动风格、需要黑色商务款等..."
+                value={createPreferences.note || ""}
+                onChange={(e) => setCreatePreferences({ ...createPreferences, note: e.target.value })}
+                rows={2}
+              />
+            </div>
+
+            {/* 费用总结 */}
+            <div className="flex items-center justify-between py-3 border-t">
+              <span className="text-slate-600">每月费用</span>
+              <span className="text-xl font-bold text-amber-600">
+                ¥{planConfigs[selectedPlan].price}
+              </span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              取消
+            </Button>
+            <Button 
+              onClick={handleCreateSubscription} 
+              className="bg-amber-600 hover:bg-amber-700"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  创建中...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  确认创建
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 偏好设置弹窗 */}
       <Dialog open={preferencesOpen} onOpenChange={setPreferencesOpen}>

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, LogIn } from "lucide-react";
+import { useAuthStore } from "@/lib/store/authStore";
 
 // 产品分类数据
 const categories = [
@@ -121,14 +123,35 @@ const boxContents = [
 ];
 
 export default function ProductShowcase() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
   const [activeCategory, setActiveCategory] = useState("all");
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
   const [selectedBox, setSelectedBox] = useState<number | null>(1); // 默认选中标准版
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const filteredProducts =
     activeCategory === "all"
       ? products
       : products.filter((p) => p.category === activeCategory);
+
+  // 处理订阅方案选择
+  const handleBoxSelect = (box: typeof boxContents[0], idx: number) => {
+    if (isProcessing) return;
+    
+    setSelectedBox(idx);
+    
+    // 延迟跳转，让用户看到选中效果
+    setTimeout(() => {
+      if (!isAuthenticated) {
+        // 未登录：跳转到登录页，并带上订阅方案信息
+        router.push(`/auth/login?redirect=/dashboard/subscriptions&plan=${idx}`);
+      } else {
+        // 已登录：跳转到订阅管理页面，并带上选择的方案
+        router.push(`/dashboard/subscriptions?create=true&plan=${idx}`);
+      }
+    }, 400);
+  };
 
   return (
     <section className="py-20 bg-white">
@@ -283,28 +306,25 @@ export default function ProductShowcase() {
             {boxContents.map((box, idx) => (
               <div
                 key={idx}
-                onClick={() => {
-                  setSelectedBox(idx);
-                  // TODO: 这里可以跳转到订阅确认页面或打开支付弹窗
-                  console.log("选中订阅方案:", box);
-                }}
+                onClick={() => setSelectedBox(idx)}
                 className={`group relative cursor-pointer rounded-2xl p-6 border-2 transition-all duration-300 
                   ${selectedBox === idx
                     ? "bg-white/20 border-amber-400 shadow-lg shadow-amber-400/20 scale-105"
                     : "bg-white/10 border-white/20 hover:bg-white/20 hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/10 hover:scale-105"
                   }`}
               >
-                {/* 选中标记 - 仅在选中时显示 */}
+                {/* 选中标记 */}
                 {selectedBox === idx && (
-                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center z-10 animate-bounce">
+                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center z-10">
                     <Check className="h-5 w-5 text-amber-900" />
                   </div>
                 )}
 
-                {/* 悬停提示 - 未选中时悬停显示 */}
-                {selectedBox !== idx && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white/20 text-white text-xs font-medium px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    点击查看详情
+                {/* 未登录提示 */}
+                {!isAuthenticated && selectedBox === idx && (
+                  <div className="absolute -top-3 left-4 bg-slate-600 text-white text-xs font-medium px-3 py-1 rounded-full z-10 flex items-center gap-1">
+                    <Lock className="h-3 w-3" />
+                    需登录
                   </div>
                 )}
 
@@ -344,24 +364,61 @@ export default function ProductShowcase() {
                   ))}
                 </ul>
 
-                {/* 立即订阅提示 */}
-                <div className={`w-full py-3 rounded-full font-bold text-center transition-all duration-300 flex items-center justify-center gap-2 ${
-                  selectedBox === idx
-                    ? "bg-amber-400 text-amber-900"
-                    : "bg-white/10 text-white group-hover:bg-amber-400 group-hover:text-amber-900"
-                }`}>
-                  {selectedBox === idx ? "已选择 ✓" : "点击立即订阅"}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {/* 选择按钮 */}
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBoxSelect(box, idx);
+                  }}
+                  className={`w-full py-3 rounded-full font-bold text-center transition-all duration-300 flex items-center justify-center gap-2 ${
+                    selectedBox === idx
+                      ? "bg-amber-400 text-amber-900 hover:bg-amber-300"
+                      : "bg-white/10 text-white group-hover:bg-amber-400 group-hover:text-amber-900"
+                  }`}
+                >
+                  {selectedBox === idx 
+                    ? (isAuthenticated ? "立即订阅" : "登录后订阅")
+                    : "选择此方案"
+                  }
+                  <ArrowRight className={`h-4 w-4 transition-transform ${selectedBox === idx ? "" : "group-hover:translate-x-1"}`} />
                 </div>
               </div>
             ))}
           </div>
 
-          {/* 选中提示 */}
+          {/* 选中提示和订阅按钮 */}
           {selectedBox !== null && (
-            <div className="mt-8 text-center text-slate-400 text-sm">
-              已选择 <span className="text-amber-400 font-bold">{boxContents[selectedBox].title}</span>，
-              点击其他卡片可切换方案
+            <div className="mt-8 text-center">
+              <p className="text-slate-400 text-sm mb-4">
+                已选择 <span className="text-amber-400 font-bold">{boxContents[selectedBox].title}</span>
+              </p>
+              <button
+                onClick={() => handleBoxSelect(boxContents[selectedBox], selectedBox)}
+                disabled={isProcessing}
+                className="inline-flex items-center gap-2 bg-amber-400 text-amber-900 px-8 py-3 rounded-full font-bold text-lg hover:bg-amber-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-400/20 hover:shadow-xl hover:shadow-amber-400/30 hover:scale-105"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-amber-900/30 border-t-amber-900 rounded-full animate-spin" />
+                    处理中...
+                  </>
+                ) : isAuthenticated ? (
+                  <>
+                    立即订阅
+                    <ArrowRight className="h-5 w-5" />
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-5 w-5" />
+                    登录后订阅
+                  </>
+                )}
+              </button>
+              <p className="mt-3 text-slate-500 text-xs">
+                {isAuthenticated 
+                  ? "点击上方按钮跳转到订阅确认页面" 
+                  : "需要登录后才能创建订阅"}
+              </p>
             </div>
           )}
         </div>
