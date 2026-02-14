@@ -37,9 +37,9 @@ export default function LoginPage() {
   // 如果已登录，跳转到仪表板
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   // 清除错误 - 只在组件挂载时执行一次
   useEffect(() => {

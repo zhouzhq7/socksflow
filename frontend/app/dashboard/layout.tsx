@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -68,29 +68,26 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, isAuthenticated, logout, fetchUser } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const hasFetched = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // 初始化时获取用户信息 - 只执行一次
+  // 处理 hydration
   useEffect(() => {
-    const init = async () => {
-      // 避免重复获取
-      if (hasFetched.current) {
-        setIsLoading(false);
-        return;
-      }
-      hasFetched.current = true;
-
-      // 如果没有认证信息，尝试从token恢复
-      if (!isAuthenticated) {
-        await fetchUser();
-      }
-      setIsLoading(false);
-    };
-    init();
-    // 依赖项为空数组，确保只执行一次
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setIsHydrated(true);
   }, []);
+
+  // 初始化时获取用户信息（只在客户端执行一次）
+  useEffect(() => {
+    if (!isHydrated) return;
+    
+    // 延迟执行，避免 hydration 不匹配
+    const timer = setTimeout(() => {
+      if (!user && !isAuthenticated) {
+        fetchUser();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isHydrated]);
 
   // 处理登出
   const handleLogout = () => {
@@ -127,7 +124,7 @@ export default function DashboardLayout({
             <Icon className={cn("h-5 w-5", isActive ? "text-amber-600" : "text-slate-500")} />
             <span>{item.title}</span>
             {isActive && !isMobile && (
-              <ChevronRight className="ml-auto h-4 w-4 text-indigo-600" />
+              <ChevronRight className="ml-auto h-4 w-4 text-amber-600" />
             )}
           </Link>
         );
@@ -135,7 +132,8 @@ export default function DashboardLayout({
     </nav>
   );
 
-  if (isLoading) {
+  // 在 hydration 完成前显示加载状态
+  if (!isHydrated) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
@@ -229,7 +227,7 @@ export default function DashboardLayout({
                     className="flex items-center gap-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600">
                       <Footprints className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-lg font-bold text-slate-900">SockFlow</span>

@@ -14,17 +14,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuthStore, initAuth } from "@/lib/store/authStore";
+import { useAuthStore } from "@/lib/store/authStore";
 
 export default function AuthNav() {
   const router = useRouter();
   const { user, isAuthenticated, logout, fetchUser } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
-  // 避免 hydration 不匹配
+  // 避免 hydration 不匹配，只在客户端获取用户信息
   useEffect(() => {
     setMounted(true);
-    initAuth();
+    // 如果已认证但没有用户信息，获取用户信息
+    if (!user && isAuthenticated) {
+      fetchUser();
+    }
   }, []);
 
   const handleLogout = () => {
@@ -42,7 +45,7 @@ export default function AuthNav() {
       .slice(0, 2);
   };
 
-  // 服务端渲染时不显示任何内容，避免 hydration 不匹配
+  // 服务端渲染或 hydration 期间显示占位符
   if (!mounted) {
     return (
       <div className="flex items-center gap-4">
