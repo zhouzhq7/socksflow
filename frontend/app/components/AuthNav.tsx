@@ -24,8 +24,8 @@ export default function AuthNav() {
   // 避免 hydration 不匹配，只在客户端获取用户信息
   useEffect(() => {
     setMounted(true);
-    // 如果已认证但没有用户信息，获取用户信息
-    if (!user && isAuthenticated) {
+    // 如果还没有认证状态，尝试获取用户信息
+    if (!isAuthenticated) {
       fetchUser();
     }
   }, []);
@@ -45,7 +45,7 @@ export default function AuthNav() {
       .slice(0, 2);
   };
 
-  // 服务端渲染或 hydration 期间显示占位符
+  // 在 hydration 完成前显示加载占位符
   if (!mounted) {
     return (
       <div className="flex items-center gap-4">
@@ -54,24 +54,31 @@ export default function AuthNav() {
     );
   }
 
-  if (isAuthenticated && user) {
+  // 如果已认证，显示用户菜单
+  if (isAuthenticated) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-slate-100">
             <Avatar className="h-8 w-8 bg-amber-100">
               <AvatarFallback className="bg-amber-500 text-white text-sm font-medium">
-                {getInitials(user.name)}
+                {user ? getInitials(user.name) : "U"}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium text-slate-700 hidden sm:block">{user.name}</span>
+            <span className="text-sm font-medium text-slate-700 hidden sm:block">
+              {user?.name || "用户"}
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none text-slate-900">{user.name}</p>
-              <p className="text-xs leading-none text-slate-500">{user.email}</p>
+              <p className="text-sm font-medium leading-none text-slate-900">
+                {user?.name || "用户"}
+              </p>
+              <p className="text-xs leading-none text-slate-500">
+                {user?.email || ""}
+              </p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -100,6 +107,7 @@ export default function AuthNav() {
     );
   }
 
+  // 未登录状态
   return (
     <div className="flex items-center gap-3">
       <a

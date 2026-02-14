@@ -75,18 +75,7 @@ export default function DashboardLayout({
     setIsHydrated(true);
   }, []);
 
-  // 监听认证状态变化，如果未认证则重定向
-  useEffect(() => {
-    if (isHydrated && !isAuthenticated && !user) {
-      // 延迟检查，给 fetchUser 时间执行
-      const timer = setTimeout(() => {
-        router.push("/auth/login");
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isHydrated, isAuthenticated, user, router]);
-
-  // 初始化时获取用户信息（只在客户端执行一次）
+  // 初始化时获取用户信息
   useEffect(() => {
     if (!isHydrated) return;
     
@@ -103,7 +92,19 @@ export default function DashboardLayout({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [isHydrated, isAuthenticated, fetchUser, router]);
+  }, [isHydrated]);
+
+  // 在 hydration 完成且认证状态确定前，显示加载状态
+  if (!isHydrated || (!isAuthenticated && !user)) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-200 border-t-amber-600" />
+          <p className="text-sm text-slate-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   // 处理登出
   const handleLogout = () => {
