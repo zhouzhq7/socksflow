@@ -83,10 +83,17 @@ const statusConfig: Record<
 
 // 频率选项
 const frequencyOptions = [
-  { value: "monthly", label: "每月配送" },
-  { value: "bimonthly", label: "双月配送" },
-  { value: "quarterly", label: "季度配送" },
+  { value: "1", label: "每月配送" },
+  { value: "2", label: "双月配送" },
+  { value: "3", label: "季度配送" },
 ];
+
+// 配送频率映射
+const frequencyMap: Record<string, number> = {
+  monthly: 1,
+  bimonthly: 2,
+  quarterly: 3,
+};
 
 // 订阅方案配置
 const planConfigs = [
@@ -233,7 +240,30 @@ export default function SubscriptionsPage() {
   // 创建订阅
   const handleCreateSubscription = async () => {
     const plan = planConfigs[selectedPlan];
-    await createSubscription(plan.code, createPreferences);
+    // 解析频率值
+    const freqValue = createPreferences.frequency || "monthly";
+    const frequency = frequencyMap[freqValue] || parseInt(freqValue) || 1;
+    
+    // 构建后端需要的数据格式
+    const subscriptionData = {
+      plan_code: plan.code,
+      delivery_frequency: frequency,
+      shipping_address: {
+        name: "默认地址",
+        phone: "",
+        address: "待完善",
+        city: "",
+        province: "",
+      },
+      style_preferences: {
+        size: createPreferences.size,
+        note: createPreferences.note,
+      },
+      auto_renew: true,
+      payment_method: "alipay",
+    };
+    
+    await createSubscription(subscriptionData.plan_code, subscriptionData);
     setCreateOpen(false);
     setCreatePreferences({ frequency: "monthly", size: "M" });
   };
