@@ -58,12 +58,13 @@ export default function AuthNav() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-9 w-9 rounded-full hover:bg-slate-100">
-            <Avatar className="h-9 w-9 bg-amber-100">
+          <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-slate-100">
+            <Avatar className="h-8 w-8 bg-amber-100">
               <AvatarFallback className="bg-amber-500 text-white text-sm font-medium">
                 {getInitials(user.name)}
               </AvatarFallback>
             </Avatar>
+            <span className="text-sm font-medium text-slate-700 hidden sm:block">{user.name}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
