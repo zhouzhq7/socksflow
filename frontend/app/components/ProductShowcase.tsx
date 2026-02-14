@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Footprints, Star, Check, ArrowRight, Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 
 // 产品分类数据
 const categories = [
@@ -334,52 +334,8 @@ export default function ProductShowcase() {
           </div>
         </div>
 
-        {/* 客户评价 */}
-        <div className="mt-20">
-          <h3 className="text-2xl font-bold text-center text-slate-900 mb-12">
-            用户真实评价
-          </h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "张先生",
-                role: "订阅用户 · 6个月",
-                content: "以前总是找不到配对的袜子，现在每个月都有新袜子送到，质量还特别好！",
-                rating: 5,
-              },
-              {
-                name: "李女士",
-                role: "订阅用户 · 1年",
-                content: "给老公订的，他特别喜欢运动袜系列。客服服务也很贴心，会根据反馈调整搭配。",
-                rating: 5,
-              },
-              {
-                name: "王先生",
-                role: "订阅用户 · 3个月",
-                content: "商务袜的品质超出预期，比商场里买的还要舒服，性价比很高。",
-                rating: 5,
-              },
-            ].map((review, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
-              >
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 text-amber-400 fill-amber-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 mb-4 leading-relaxed">
-                  "{review.content}"
-                </p>
-                <div>
-                  <p className="font-medium text-slate-900">{review.name}</p>
-                  <p className="text-sm text-slate-500">{review.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* 客户评价 - 轮播展示 */}
+        <TestimonialCarousel />
       </div>
     </section>
   );
@@ -440,5 +396,203 @@ function SockIllustration({ color, pattern }: { color: string; pattern: string }
       {/* 高光 */}
       <ellipse cx="40" cy="30" rx="8" ry="15" fill="rgba(255,255,255,0.2)" />
     </svg>
+  );
+}
+// 评价数据
+const testimonials = [
+  {
+    id: 1,
+    name: "张先生",
+    role: "订阅用户 · 6个月",
+    avatar: "Z",
+    content: "以前总是找不到配对的袜子，现在每个月都有新袜子送到，质量还特别好！ SockFlow 彻底改变了我对袜子的认知。",
+    rating: 5,
+  },
+  {
+    id: 2,
+    name: "李女士",
+    role: "订阅用户 · 1年",
+    avatar: "L",
+    content: "给老公订的，他特别喜欢运动袜系列。客服服务也很贴心，会根据反馈调整搭配。一年下来省了不少购物时间！",
+    rating: 5,
+  },
+  {
+    id: 3,
+    name: "王先生",
+    role: "订阅用户 · 3个月",
+    avatar: "W",
+    content: "商务袜的品质超出预期，比商场里买的还要舒服，性价比很高。穿在脚上很有质感，同事都问我在哪买的。",
+    rating: 5,
+  },
+  {
+    id: 4,
+    name: "陈小姐",
+    role: "订阅用户 · 8个月",
+    avatar: "C",
+    content: "羊毛袜太舒服了！冬天脚再也不冷了。而且包装很精美，每次开箱都有惊喜的感觉，像收到礼物一样。",
+    rating: 5,
+  },
+  {
+    id: 5,
+    name: "刘先生",
+    role: "订阅用户 · 2年",
+    avatar: "L",
+    content: "从最开始的怀疑到现在的铁杆粉丝，SockFlow 的品质一直很稳定。推荐给所有懒人，再也不用担心袜子不够穿了！",
+    rating: 5,
+  },
+];
+
+// 评价轮播组件
+function TestimonialCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [direction, setDirection] = useState<"left" | "right">("right");
+
+  const nextSlide = useCallback(() => {
+    setDirection("right");
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setDirection("left");
+    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  }, []);
+
+  const goToSlide = (index: number) => {
+    setDirection(index > currentIndex ? "right" : "left");
+    setCurrentIndex(index);
+  };
+
+  // 自动轮播
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    
+    const timer = setInterval(() => {
+      nextSlide();
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [isAutoPlaying, nextSlide]);
+
+  // 暂停自动播放当用户交互时
+  const handleInteraction = () => {
+    setIsAutoPlaying(false);
+    // 5秒后恢复自动播放
+    setTimeout(() => setIsAutoPlaying(true), 5000);
+  };
+
+  const currentTestimonial = testimonials[currentIndex];
+
+  return (
+    <div className="mt-20">
+      <h3 className="text-2xl font-bold text-center text-slate-900 mb-12">
+        用户真实评价
+      </h3>
+      
+      <div 
+        className="relative max-w-4xl mx-auto px-4"
+        onMouseEnter={() => setIsAutoPlaying(false)}
+        onMouseLeave={() => setIsAutoPlaying(true)}
+      >
+        {/* 主轮播区域 */}
+        <div className="relative overflow-hidden">
+          <div 
+            className="transition-all duration-500 ease-out transform"
+            style={{
+              opacity: 1,
+              transform: `translateX(0)`,
+            }}
+            key={currentTestimonial.id}
+          >
+            <div className="bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-lg">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* 左侧：头像和基本信息 */}
+                <div className="flex-shrink-0 text-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mb-4 mx-auto">
+                    {currentTestimonial.avatar}
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mb-2">
+                    {[...Array(currentTestimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <p className="font-medium text-slate-900">{currentTestimonial.name}</p>
+                  <p className="text-sm text-slate-500">{currentTestimonial.role}</p>
+                </div>
+
+                {/* 右侧：评价内容 */}
+                <div className="flex-1 text-center md:text-left">
+                  <Quote className="h-10 w-10 text-indigo-200 mb-4 mx-auto md:mx-0" />
+                  <p className="text-lg md:text-xl text-slate-700 leading-relaxed italic">
+                    "{currentTestimonial.content}"
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 左右箭头 */}
+        <button
+          onClick={() => {
+            handleInteraction();
+            prevSlide();
+          }}
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 w-12 h-12 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:shadow-xl transition-all z-10"
+          aria-label="上一条评价"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <button
+          onClick={() => {
+            handleInteraction();
+            nextSlide();
+          }}
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 w-12 h-12 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:shadow-xl transition-all z-10"
+          aria-label="下一条评价"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+
+        {/* 指示点 */}
+        <div className="flex items-center justify-center gap-2 mt-8">
+          {testimonials.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                handleInteraction();
+                goToSlide(index);
+              }}
+              className={`transition-all duration-300 rounded-full ${
+                index === currentIndex
+                  ? "w-8 h-2 bg-indigo-600"
+                  : "w-2 h-2 bg-slate-300 hover:bg-slate-400"
+              }`}
+              aria-label={`跳转到第 ${index + 1} 条评价`}
+            />
+          ))}
+        </div>
+
+        {/* 进度条 */}
+        <div className="mt-4 h-1 bg-slate-100 rounded-full overflow-hidden max-w-xs mx-auto">
+          <div 
+            className="h-full bg-indigo-600 transition-all duration-300 ease-linear"
+            style={{ 
+              width: `${((currentIndex + 1) / testimonials.length) * 100}%`,
+            }}
+          />
+        </div>
+
+        {/* 自动播放状态指示 */}
+        <div className="flex items-center justify-center gap-2 mt-4 text-sm text-slate-400">
+          <div 
+            className={`w-2 h-2 rounded-full transition-colors ${
+              isAutoPlaying ? "bg-green-400" : "bg-slate-300"
+            }`} 
+          />
+          {isAutoPlaying ? "自动播放中" : "已暂停"}
+        </div>
+      </div>
+    </div>
   );
 }

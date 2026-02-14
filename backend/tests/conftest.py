@@ -13,8 +13,8 @@ from sqlalchemy.orm import sessionmaker
 from app.core import Base, get_db
 from app.main import app
 
-# 测试数据库 URL
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/sockflow_test"
+# 测试数据库 URL (使用 SQLite)
+TEST_DATABASE_URL = "sqlite+aiosqlite:///./sockflow_test.db"
 
 # 创建测试引擎
 engine = create_async_engine(TEST_DATABASE_URL, echo=False)

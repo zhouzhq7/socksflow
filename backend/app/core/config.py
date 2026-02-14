@@ -71,7 +71,14 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         """获取同步数据库 URL（用于 Alembic）"""
-        return self.database_url.replace("+asyncpg", "")
+        url = self.database_url
+        # 处理 PostgreSQL
+        if "+asyncpg" in url:
+            url = url.replace("+asyncpg", "")
+        # 处理 SQLite
+        elif "+aiosqlite" in url:
+            url = url.replace("+aiosqlite", "")
+        return url
     
     @property
     def is_production(self) -> bool:

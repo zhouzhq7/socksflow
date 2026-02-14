@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import api_router
 from app.core import close_db, init_db, settings
 
+# 导入所有模型以确保 SQLAlchemy 正确注册
+from app.models import User, SizeProfile, Subscription
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
