@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.models.subscription import Subscription
     from app.models.order import Order
     from app.models.payment import Payment
+    from app.models.address import Address
 
 
 class User(Base):
@@ -61,6 +62,9 @@ class User(Base):
     )
     payments: Mapped[List["Payment"]] = relationship(
         "Payment", back_populates="user", lazy="selectin"
+    )
+    addresses: Mapped[List["Address"]] = relationship(
+        "Address", back_populates="user", lazy="selectin", cascade="all, delete-orphan"
     )
     
     def __repr__(self) -> str:

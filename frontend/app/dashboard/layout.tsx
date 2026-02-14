@@ -14,6 +14,7 @@ import {
   ChevronRight,
   User,
   UserCircle,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -46,6 +47,11 @@ const navItems = [
     title: "订单历史",
     href: "/dashboard/orders",
     icon: ShoppingBag,
+  },
+  {
+    title: "地址管理",
+    href: "/dashboard/addresses",
+    icon: MapPin,
   },
   {
     title: "个人设置",
