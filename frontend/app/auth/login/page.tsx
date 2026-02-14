@@ -29,17 +29,23 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    rememberMe: false,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // 如果已登录，跳转到仪表板
+  // 如果已登录或登录成功，跳转到仪表板
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/dashboard");
+    if (isAuthenticated && loginSuccess) {
+      // 延迟跳转，让用户看到成功状态
+      const timer = setTimeout(() => {
+        router.replace("/dashboard");
+      }, 800);
+      return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, loginSuccess, router]);
 
   // 清除错误 - 只在组件挂载时执行一次
   useEffect(() => {
@@ -75,8 +81,11 @@ export default function LoginPage() {
 
   // 处理输入变化
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ 
+      ...prev, 
+      [name]: type === "checkbox" ? checked : value 
+    }));
     // 清除对应字段的错误
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -94,8 +103,9 @@ export default function LoginPage() {
     }
 
     try {
-      await login(formData.email, formData.password);
-      // 登录成功会自动跳转到 dashboard（通过 useEffect 监听 isAuthenticated）
+      await login(formData.email, formData.password, formData.rememberMe);
+      // 显示成功状态，然后通过 useEffect 跳转
+      setLoginSuccess(true);
     } catch (error) {
       // 显示后端返回的具体错误信息
       let errorMessage = "邮箱或密码错误，请重试";
@@ -120,6 +130,16 @@ export default function LoginPage() {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {loginSuccess && (
+            <div className="p-3 rounded-md bg-green-50 text-green-600 text-sm border border-green-200 flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span>登录成功！正在跳转...</span>
+            </div>
+          )}
           {submitError && (
             <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm border border-red-200">
               {submitError}
@@ -176,6 +196,10 @@ export default function LoginPage() {
               <input
                 type="checkbox"
                 id="remember"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleChange}
+                disabled={isLoading}
                 className="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
               />
               <Label htmlFor="remember" className="text-sm font-normal text-slate-600">
@@ -194,12 +218,17 @@ export default function LoginPage() {
           <Button
             type="submit"
             className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium"
-            disabled={isLoading}
+            disabled={isLoading || loginSuccess}
           >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 登录中...
+              </>
+            ) : loginSuccess ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                跳转中...
               </>
             ) : (
               "登录"
