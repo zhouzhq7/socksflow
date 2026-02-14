@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -161,16 +162,25 @@ export default function SubscriptionsPage() {
     }
   }, [subscriptionId, fetchSubscription]);
 
+  // 检查是否有活跃订阅
+  const hasActiveSubscription = subscriptions.some(
+    (sub) => sub.status === "active" || sub.status === "paused"
+  );
+
   // 如果有create参数，打开创建弹窗
   useEffect(() => {
     if (createParam === "true") {
+      // 如果已有活跃订阅，不打开创建弹窗
+      if (hasActiveSubscription) {
+        return;
+      }
       const planIdx = planParam ? parseInt(planParam, 10) : 0;
       if (!isNaN(planIdx) && planIdx >= 0 && planIdx < planConfigs.length) {
         setSelectedPlan(planIdx);
       }
       setCreateOpen(true);
     }
-  }, [createParam, planParam]);
+  }, [createParam, planParam, hasActiveSubscription]);
 
   // 展开/折叠订阅详情
   const toggleExpand = async (subscription: Subscription) => {
@@ -238,7 +248,17 @@ export default function SubscriptionsPage() {
   };
 
   // 创建订阅
+  const [createError, setCreateError] = useState<string | null>(null);
+  
   const handleCreateSubscription = async () => {
+    setCreateError(null);
+    
+    // 再次检查是否已有活跃订阅
+    if (hasActiveSubscription) {
+      setCreateError("您已有活跃订阅，无法创建新订阅");
+      return;
+    }
+    
     const plan = planConfigs[selectedPlan];
     // 解析频率值
     const freqValue = createPreferences.frequency || "monthly";
@@ -265,9 +285,17 @@ export default function SubscriptionsPage() {
       payment_method: "alipay",
     };
     
-    await createSubscription(subscriptionData.plan_code, subscriptionData);
-    setCreateOpen(false);
-    setCreatePreferences({ frequency: "monthly", size: "M" });
+    try {
+      await createSubscription(subscriptionData.plan_code, subscriptionData);
+      setCreateOpen(false);
+      setCreatePreferences({ frequency: "monthly", size: "M" });
+      setCreateError(null);
+    } catch (error) {
+      // 处理创建订阅的错误
+      const axiosError = error as { response?: { data?: { detail?: string } } };
+      const errorMessage = axiosError.response?.data?.detail || "创建订阅失败，请稍后重试";
+      setCreateError(errorMessage);
+    }
   };
 
   return (
@@ -494,6 +522,25 @@ export default function SubscriptionsPage() {
               选择适合您的订阅方案，开始享受优质袜子配送服务
             </DialogDescription>
           </DialogHeader>
+          
+          {/* 错误提示 */}
+          {createError && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{createError}</AlertDescription>
+            </Alert>
+          )}
+          
+          {/* 已有订阅提示 */}
+          {hasActiveSubscription && (
+            <Alert className="mt-4 bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                您已有活跃订阅，如需更换方案请先取消现有订阅
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div className="grid gap-6 py-4">
             {/* 方案选择 */}
             <div className="grid gap-3">

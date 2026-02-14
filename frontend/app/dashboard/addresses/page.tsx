@@ -451,7 +451,9 @@ export default function AddressesPage() {
                     <SelectContent>
                       {DISTRICTS[formData.city]?.map((d) => (
                         <SelectItem key={d} value={d}>{d}</SelectItem>
-                      )) || (
+                      ))}
+                      {/* 当没有区县数据时，使用城市名作为唯一选项 */}
+                      {(!DISTRICTS[formData.city] || DISTRICTS[formData.city].length === 0) && formData.city && (
                         <SelectItem value={formData.city}>{formData.city}</SelectItem>
                       )}
                     </SelectContent>
