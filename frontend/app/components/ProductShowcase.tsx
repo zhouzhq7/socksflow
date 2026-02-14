@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, LogIn } from "lucide-react";
-import { useAuthStore } from "@/lib/store/authStore";
+import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, LogIn, AlertCircle } from "lucide-react";
+import { useAuthStore, isUserProfileComplete } from "@/lib/store/authStore";
 
 // 产品分类数据
 const categories = [
@@ -124,11 +124,14 @@ const boxContents = [
 
 export default function ProductShowcase() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [activeCategory, setActiveCategory] = useState("all");
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
   const [selectedBox, setSelectedBox] = useState<number | null>(1); // 默认选中标准版
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // 检查用户是否已完成必要信息
+  const isProfileComplete = user ? isUserProfileComplete(user) : false;
 
   const filteredProducts =
     activeCategory === "all"
@@ -146,8 +149,11 @@ export default function ProductShowcase() {
       if (!isAuthenticated) {
         // 未登录：跳转到登录页，并带上订阅方案信息
         router.push(`/auth/login?redirect=/dashboard/subscriptions&plan=${idx}`);
+      } else if (!isProfileComplete) {
+        // 已登录但信息不完整：跳转到信息完善页面
+        router.push(`/complete-profile?return=/dashboard/subscriptions?create=true&plan=${idx}`);
       } else {
-        // 已登录：跳转到订阅管理页面，并带上选择的方案
+        // 已登录且信息完整：跳转到订阅管理页面
         router.push(`/dashboard/subscriptions?create=true&plan=${idx}`);
       }
     }, 400);
@@ -328,6 +334,14 @@ export default function ProductShowcase() {
                   </div>
                 )}
 
+                {/* 信息不完整提示 */}
+                {isAuthenticated && !isProfileComplete && selectedBox === idx && (
+                  <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-medium px-3 py-1 rounded-full z-10 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    需完善信息
+                  </div>
+                )}
+
                 {/* 受欢迎标签 */}
                 {box.popular && (
                   <div className="absolute -top-3 left-4 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full z-10">
@@ -377,7 +391,11 @@ export default function ProductShowcase() {
                   }`}
                 >
                   {selectedBox === idx 
-                    ? (isAuthenticated ? "立即订阅" : "登录后订阅")
+                    ? (!isAuthenticated 
+                        ? "登录后订阅" 
+                        : !isProfileComplete 
+                          ? "完善信息后订阅"
+                          : "立即订阅")
                     : "选择此方案"
                   }
                   <ArrowRight className={`h-4 w-4 transition-transform ${selectedBox === idx ? "" : "group-hover:translate-x-1"}`} />
@@ -402,22 +420,29 @@ export default function ProductShowcase() {
                     <div className="w-5 h-5 border-2 border-amber-900/30 border-t-amber-900 rounded-full animate-spin" />
                     处理中...
                   </>
-                ) : isAuthenticated ? (
-                  <>
-                    立即订阅
-                    <ArrowRight className="h-5 w-5" />
-                  </>
-                ) : (
+                ) : !isAuthenticated ? (
                   <>
                     <LogIn className="h-5 w-5" />
                     登录后订阅
                   </>
+                ) : !isProfileComplete ? (
+                  <>
+                    <AlertCircle className="h-5 w-5" />
+                    完善信息后订阅
+                  </>
+                ) : (
+                  <>
+                    立即订阅
+                    <ArrowRight className="h-5 w-5" />
+                  </>
                 )}
               </button>
               <p className="mt-3 text-slate-500 text-xs">
-                {isAuthenticated 
-                  ? "点击上方按钮跳转到订阅确认页面" 
-                  : "需要登录后才能创建订阅"}
+                {!isAuthenticated 
+                  ? "需要登录后才能创建订阅"
+                  : !isProfileComplete 
+                    ? "需要完善手机号、地址和尺码信息"
+                    : "点击上方按钮跳转到订阅确认页面"}
               </p>
             </div>
           )}

@@ -82,24 +82,29 @@ async def create_subscription(
             months=1
         )
         
-        # 创建支付宝支付
-        payment_service = PaymentService(db)
-        payment, pay_url = await payment_service.create_alipay_payment(
-            user_id=current_user.id,
-            order=order,
-            return_url=None
-        )
+        # 创建支付宝支付（如果SDK已安装）
+        try:
+            payment_service = PaymentService(db)
+            payment, pay_url = await payment_service.create_alipay_payment(
+                user_id=current_user.id,
+                order=order,
+                return_url=None
+            )
+            payment_params = {
+                "pay_url": pay_url,
+                "payment_id": payment.id,
+                "payment_no": payment.payment_no
+            }
+        except ImportError:
+            # 支付宝SDK未安装，继续但不创建支付
+            payment_params = None
         
         await db.commit()
         
         return SubscriptionWithPaymentResponse(
             subscription=subscription,
             order=order,
-            payment_params={
-                "pay_url": pay_url,
-                "payment_id": payment.id,
-                "payment_no": payment.payment_no
-            }
+            payment_params=payment_params
         )
         
     except ValueError as e:
@@ -107,13 +112,6 @@ async def create_subscription(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
-    except ImportError as e:
-        await db.rollback()
-        # 支付宝SDK未安装，返回订阅信息但不包含支付参数
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"支付服务未配置: {str(e)}"
         )
     except Exception as e:
         await db.rollback()

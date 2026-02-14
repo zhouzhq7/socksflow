@@ -290,7 +290,7 @@ class SubscriptionService:
         return [{
             "name": f"{plan['name']} - 月度订阅",
             "quantity": 1,
-            "unit_price": plan["price_monthly"],
-            "subtotal": plan["price_monthly"],
+            "unit_price": float(plan["price_monthly"]),
+            "subtotal": float(plan["price_monthly"]),
             "description": f"包含每月{plan['socks_per_month']}双精选袜子"
         }]

@@ -156,7 +156,7 @@ class OrderService:
         
         # 调整价格和描述
         for item in items:
-            item["subtotal"] = total_amount
+            item["subtotal"] = float(total_amount)
             if months > 1:
                 item["description"] = f"{months}个月订阅 - {item['description']}"
         
