@@ -12,6 +12,8 @@ from app.core.database import Base
 if TYPE_CHECKING:
     from app.models.size_profile import SizeProfile
     from app.models.subscription import Subscription
+    from app.models.order import Order
+    from app.models.payment import Payment
 
 
 class User(Base):
@@ -53,6 +55,12 @@ class User(Base):
     )
     subscriptions: Mapped[List["Subscription"]] = relationship(
         "Subscription", back_populates="user", lazy="selectin"
+    )
+    orders: Mapped[List["Order"]] = relationship(
+        "Order", back_populates="user", lazy="selectin"
+    )
+    payments: Mapped[List["Payment"]] = relationship(
+        "Payment", back_populates="user", lazy="selectin"
     )
     
     def __repr__(self) -> str:

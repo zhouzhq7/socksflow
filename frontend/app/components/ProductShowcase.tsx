@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package } from "lucide-react";
 
 // 产品分类数据
 const categories = [
@@ -123,6 +123,7 @@ const boxContents = [
 export default function ProductShowcase() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
+  const [selectedBox, setSelectedBox] = useState<number | null>(1); // 默认选中标准版
 
   const filteredProducts =
     activeCategory === "all"
@@ -266,15 +267,15 @@ export default function ProductShowcase() {
           ))}
         </div>
 
-        {/* 订阅盒展示 */}
+        {/* 订阅盒展示 - 悬停预览，点击选中 */}
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 sm:p-12 text-white">
           <div className="text-center mb-12">
             <h3 className="text-2xl sm:text-3xl font-bold mb-4">
-              您的订阅盒里有什么？
+              选择您的订阅方案
             </h3>
             <p className="text-slate-300 max-w-2xl mx-auto">
               每月精心搭配的袜子组合，根据您的偏好和需求定制，
-              惊喜与实用兼备
+              悬停预览效果，点击卡片立即订阅
             </p>
           </div>
 
@@ -282,56 +283,87 @@ export default function ProductShowcase() {
             {boxContents.map((box, idx) => (
               <div
                 key={idx}
-                className={`relative bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 ${
-                  box.popular ? "ring-2 ring-amber-400" : ""
-                }`}
+                onClick={() => {
+                  setSelectedBox(idx);
+                  // TODO: 这里可以跳转到订阅确认页面或打开支付弹窗
+                  console.log("选中订阅方案:", box);
+                }}
+                className={`group relative cursor-pointer rounded-2xl p-6 border-2 transition-all duration-300 
+                  ${selectedBox === idx
+                    ? "bg-white/20 border-amber-400 shadow-lg shadow-amber-400/20 scale-105"
+                    : "bg-white/10 border-white/20 hover:bg-white/20 hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/10 hover:scale-105"
+                  }`}
               >
+                {/* 选中标记 - 仅在选中时显示 */}
+                {selectedBox === idx && (
+                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center z-10 animate-bounce">
+                    <Check className="h-5 w-5 text-amber-900" />
+                  </div>
+                )}
+
+                {/* 悬停提示 - 未选中时悬停显示 */}
+                {selectedBox !== idx && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white/20 text-white text-xs font-medium px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    点击查看详情
+                  </div>
+                )}
+
+                {/* 受欢迎标签 */}
                 {box.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-4 py-1 rounded-full">
+                  <div className="absolute -top-3 left-4 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full z-10">
                     最受欢迎
                   </div>
                 )}
 
                 {/* 盒子视觉 */}
                 <div
-                  className={`h-32 rounded-xl bg-gradient-to-br ${box.color} mb-6 flex items-center justify-center relative overflow-hidden`}
+                  className={`h-32 rounded-xl bg-gradient-to-br ${box.color} mb-6 flex items-center justify-center relative overflow-hidden transition-all duration-300 ${
+                    selectedBox === idx ? "ring-2 ring-amber-400" : ""
+                  }`}
                 >
                   <div className="absolute inset-0 bg-white/10" />
                   <div className="relative text-center">
-                    <Footprints className="h-12 w-12 text-white/80 mx-auto mb-2" />
+                    <Package className="h-12 w-12 text-white/80 mx-auto mb-2" />
                     <span className="text-3xl font-bold text-white">{box.pairs}</span>
-                    <span className="text-white/80 ml-1">双</span>
+                    <span className="text-white/80 ml-1">双/月</span>
                   </div>
                   {/* 装饰 */}
                   <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-white/20 rounded-full" />
                   <div className="absolute -top-4 -left-4 w-12 h-12 bg-white/10 rounded-full" />
                 </div>
 
-                <h4 className="text-xl font-bold mb-2">{box.title}</h4>
-                <p className="text-2xl font-bold text-amber-400 mb-4">{box.price}/月</p>
+                <h4 className="text-xl font-bold mb-2 group-hover:text-amber-300 transition-colors">{box.title}</h4>
+                <p className="text-3xl font-bold text-amber-400 mb-4 group-hover:scale-110 transition-transform origin-left">{box.price}<span className="text-lg text-slate-400">/月</span></p>
 
                 <ul className="space-y-2 mb-6">
                   {box.items.map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
-                      <Check className="h-4 w-4 text-green-400" />
+                    <li key={i} className="flex items-center gap-2 text-sm text-slate-300 group-hover:text-white transition-colors">
+                      <Check className={`h-4 w-4 transition-colors ${selectedBox === idx ? "text-amber-400" : "text-green-400 group-hover:text-amber-400"}`} />
                       {item}
                     </li>
                   ))}
                 </ul>
 
-                <button
-                  className={`w-full py-3 rounded-full font-medium transition-colors flex items-center justify-center gap-2 ${
-                    box.popular
-                      ? "bg-amber-400 text-amber-900 hover:bg-amber-300"
-                      : "bg-white/20 text-white hover:bg-white/30"
-                  }`}
-                >
-                  选择此方案
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+                {/* 立即订阅提示 */}
+                <div className={`w-full py-3 rounded-full font-bold text-center transition-all duration-300 flex items-center justify-center gap-2 ${
+                  selectedBox === idx
+                    ? "bg-amber-400 text-amber-900"
+                    : "bg-white/10 text-white group-hover:bg-amber-400 group-hover:text-amber-900"
+                }`}>
+                  {selectedBox === idx ? "已选择 ✓" : "点击立即订阅"}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </div>
               </div>
             ))}
           </div>
+
+          {/* 选中提示 */}
+          {selectedBox !== null && (
+            <div className="mt-8 text-center text-slate-400 text-sm">
+              已选择 <span className="text-amber-400 font-bold">{boxContents[selectedBox].title}</span>，
+              点击其他卡片可切换方案
+            </div>
+          )}
         </div>
 
         {/* 客户评价 - 轮播展示 */}

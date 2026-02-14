@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7天
     
-    # 数据库配置
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/sockflow"
+    # 数据库配置 (SQLite)
+    database_url: str = "sqlite+aiosqlite:///./sockflow.db"
     database_echo: bool = False
     
     # Redis 配置

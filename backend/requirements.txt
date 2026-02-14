@@ -41,3 +41,6 @@ mypy==1.13.0
 # Utilities
 python-dateutil==2.9.0
 pytz==2024.2
+
+# Payment
+python-alipay-sdk==3.3.0

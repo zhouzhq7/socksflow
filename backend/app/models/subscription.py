@@ -4,7 +4,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, Integer, String, DateTime, Numeric, Enum
+from sqlalchemy import ForeignKey, Integer, String, DateTime, Numeric, Enum, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
 
@@ -12,6 +12,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.order import Order
 
 
 class SubscriptionStatus(str, enum.Enum):
@@ -20,6 +21,12 @@ class SubscriptionStatus(str, enum.Enum):
     PAUSED = "paused"
     CANCELLED = "cancelled"
     EXPIRED = "expired"
+
+
+class PaymentMethod(str, enum.Enum):
+    """支付方式"""
+    ALIPAY = "alipay"
+    WECHAT = "wechat"
 
 
 class Subscription(Base):
@@ -38,9 +45,24 @@ class Subscription(Base):
         Enum(SubscriptionStatus), default=SubscriptionStatus.ACTIVE
     )
     
+    # 方案名称
+    plan_name: Mapped[Optional[str]] = mapped_column(
+        String(50), nullable=True
+    )  # 基础版/标准版/高级版
+    
     # 价格
     price_monthly: Mapped[float] = mapped_column(
         Numeric(10, 2), nullable=False
+    )
+    
+    # 支付方式
+    payment_method: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True
+    )  # alipay/wechat
+    
+    # 自动续费
+    auto_renew: Mapped[bool] = mapped_column(
+        Boolean, default=True
     )
     
     # 时间
@@ -53,6 +75,9 @@ class Subscription(Base):
     next_delivery_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    cancelled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     
     # 配送偏好
     delivery_frequency: Mapped[int] = mapped_column(
@@ -61,6 +86,9 @@ class Subscription(Base):
     style_preferences: Mapped[Optional[str]] = mapped_column(
         String(500), nullable=True
     )  # JSON 字符串
+    size_profile_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("size_profiles.id"), nullable=True
+    )  # 关联的尺码档案
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
@@ -73,6 +101,9 @@ class Subscription(Base):
     
     # 关系
     user: Mapped["User"] = relationship("User", back_populates="subscriptions")
+    orders: Mapped[list["Order"]] = relationship(
+        "Order", back_populates="subscription", lazy="selectin"
+    )
     
     def __repr__(self) -> str:
         return f"<Subscription(id={self.id}, user_id={self.user_id}, plan={self.plan_code})>"
