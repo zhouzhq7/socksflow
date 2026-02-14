@@ -36,20 +36,20 @@ export default function LoginPage() {
   const [submitError, setSubmitError] = useState("");
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // 如果已登录，直接重定向到 dashboard（不显示登录表单）
+  // 如果已登录，直接重定向到首页（不显示登录表单）
   useEffect(() => {
     if (isAuthenticated && !loginSuccess) {
-      // 用户已经登录，直接跳转
-      router.replace("/dashboard");
+      // 用户已经登录，直接跳转首页
+      router.replace("/");
     }
   }, [isAuthenticated, loginSuccess, router]);
 
-  // 登录成功后，延迟跳转到 dashboard
+  // 登录成功后，延迟跳转到首页
   useEffect(() => {
     if (isAuthenticated && loginSuccess) {
       // 延迟跳转，让用户看到成功状态
       const timer = setTimeout(() => {
-        router.replace("/dashboard");
+        router.replace("/");
       }, 800);
       return () => clearTimeout(timer);
     }

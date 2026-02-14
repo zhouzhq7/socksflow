@@ -46,10 +46,10 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  // 如果已登录，跳转到仪表板
+  // 如果已登录，跳转到首页
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/dashboard");
+      router.replace("/");
     }
   }, [isAuthenticated, router]);
 

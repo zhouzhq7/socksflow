@@ -30,14 +30,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 已登录用户访问认证路由，重定向到dashboard
+  // 已登录用户访问认证路由，重定向到首页
   if (isAuthRoute && token) {
     // 检查是否有重定向参数
     const redirectTo = request.nextUrl.searchParams.get("redirect");
     if (redirectTo && redirectTo.startsWith("/")) {
       return NextResponse.redirect(new URL(redirectTo, request.url));
     }
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
