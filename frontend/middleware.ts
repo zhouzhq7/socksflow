@@ -10,16 +10,18 @@ const authRoutes = ["/auth/login", "/auth/register"];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 获取token（从cookie或header）
+  // 获取token（从cookie）
   const token = request.cookies.get("access_token")?.value;
 
-  // 检查是否是受保护路由
+  // 检查是否是受保护路由（包括所有子路由）
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // 检查是否是认证路由
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  // 检查是否是认证路由（包括所有子路由）
+  const isAuthRoute = authRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
 
   // 未登录用户访问受保护路由，重定向到登录页
   if (isProtectedRoute && !token) {
@@ -30,6 +32,11 @@ export function middleware(request: NextRequest) {
 
   // 已登录用户访问认证路由，重定向到dashboard
   if (isAuthRoute && token) {
+    // 检查是否有重定向参数
+    const redirectTo = request.nextUrl.searchParams.get("redirect");
+    if (redirectTo && redirectTo.startsWith("/")) {
+      return NextResponse.redirect(new URL(redirectTo, request.url));
+    }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

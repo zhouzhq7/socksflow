@@ -136,9 +136,14 @@ export default function RegisterPage() {
         email: formData.email.trim(),
         password: formData.password,
       });
-      // 注册成功会自动登录并跳转到 dashboard
+      // 注册成功会自动登录并跳转到 dashboard（通过 useEffect 监听 isAuthenticated）
     } catch (error) {
-      setSubmitError("注册失败，该邮箱可能已被注册");
+      // 显示后端返回的具体错误信息
+      let errorMessage = "注册失败，该邮箱可能已被注册";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      setSubmitError(errorMessage);
     }
   };
 

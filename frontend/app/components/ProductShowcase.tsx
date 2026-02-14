@@ -495,13 +495,13 @@ function TestimonialCarousel() {
     setCurrentIndex(index);
   };
 
-  // 自动轮播
+  // 自动轮播 - 每2秒切换一次
   useEffect(() => {
     if (!isAutoPlaying) return;
     
     const timer = setInterval(() => {
       nextSlide();
-    }, 5000);
+    }, 2000);
 
     return () => clearInterval(timer);
   }, [isAutoPlaying, nextSlide]);

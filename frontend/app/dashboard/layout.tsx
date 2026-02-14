@@ -75,19 +75,35 @@ export default function DashboardLayout({
     setIsHydrated(true);
   }, []);
 
+  // 监听认证状态变化，如果未认证则重定向
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated && !user) {
+      // 延迟检查，给 fetchUser 时间执行
+      const timer = setTimeout(() => {
+        router.push("/auth/login");
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isHydrated, isAuthenticated, user, router]);
+
   // 初始化时获取用户信息（只在客户端执行一次）
   useEffect(() => {
     if (!isHydrated) return;
     
     // 延迟执行，避免 hydration 不匹配
     const timer = setTimeout(() => {
-      if (!user && !isAuthenticated) {
-        fetchUser();
+      if (!isAuthenticated) {
+        fetchUser().then((success) => {
+          // 如果获取用户信息失败，重定向到登录页
+          if (!success) {
+            router.push("/auth/login");
+          }
+        });
       }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [isHydrated]);
+  }, [isHydrated, isAuthenticated, fetchUser, router]);
 
   // 处理登出
   const handleLogout = () => {
@@ -150,7 +166,7 @@ export default function DashboardLayout({
       <aside className="hidden w-64 flex-col border-r bg-white lg:flex">
         {/* Logo */}
         <div className="flex h-16 items-center border-b px-6">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600">
               <Footprints className="h-5 w-5 text-white" />
             </div>
@@ -205,7 +221,7 @@ export default function DashboardLayout({
       {/* 移动端头部 */}
       <div className="flex flex-1 flex-col lg:hidden">
         <header className="flex h-14 items-center justify-between border-b bg-white px-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600">
               <Footprints className="h-5 w-5 text-white" />
             </div>

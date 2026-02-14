@@ -95,9 +95,14 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
-      // 登录成功会自动跳转到 dashboard
+      // 登录成功会自动跳转到 dashboard（通过 useEffect 监听 isAuthenticated）
     } catch (error) {
-      setSubmitError("邮箱或密码错误，请重试");
+      // 显示后端返回的具体错误信息
+      let errorMessage = "邮箱或密码错误，请重试";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      setSubmitError(errorMessage);
     }
   };
 
