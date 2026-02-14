@@ -36,7 +36,15 @@ export default function LoginPage() {
   const [submitError, setSubmitError] = useState("");
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // 如果已登录或登录成功，跳转到仪表板
+  // 如果已登录，直接重定向到 dashboard（不显示登录表单）
+  useEffect(() => {
+    if (isAuthenticated && !loginSuccess) {
+      // 用户已经登录，直接跳转
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, loginSuccess, router]);
+
+  // 登录成功后，延迟跳转到 dashboard
   useEffect(() => {
     if (isAuthenticated && loginSuccess) {
       // 延迟跳转，让用户看到成功状态
