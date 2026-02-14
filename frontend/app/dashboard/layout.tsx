@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -69,17 +69,28 @@ export default function DashboardLayout({
   const { user, isAuthenticated, logout, fetchUser } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const hasFetched = useRef(false);
 
-  // 初始化时获取用户信息
+  // 初始化时获取用户信息 - 只执行一次
   useEffect(() => {
     const init = async () => {
+      // 避免重复获取
+      if (hasFetched.current) {
+        setIsLoading(false);
+        return;
+      }
+      hasFetched.current = true;
+
+      // 如果没有认证信息，尝试从token恢复
       if (!isAuthenticated) {
         await fetchUser();
       }
       setIsLoading(false);
     };
     init();
-  }, [isAuthenticated, fetchUser]);
+    // 依赖项为空数组，确保只执行一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 处理登出
   const handleLogout = () => {

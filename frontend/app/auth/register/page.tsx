@@ -51,12 +51,13 @@ export default function RegisterPage() {
     if (isAuthenticated) {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
-  // 清除错误
+  // 清除错误 - 只在组件挂载时执行一次
   useEffect(() => {
     clearError();
-  }, [clearError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 验证邮箱格式
   const validateEmail = (email: string): boolean => {
