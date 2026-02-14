@@ -250,10 +250,12 @@ export default function SubscriptionsPage() {
       delivery_frequency: frequency,
       shipping_address: {
         name: "默认地址",
-        phone: "",
-        address: "待完善",
-        city: "",
-        province: "",
+        phone: "13800000000",
+        address: "待完善详细地址",
+        city: "北京市",
+        province: "北京市",
+        district: "朝阳区",
+        zip_code: "100000",
       },
       style_preferences: {
         size: createPreferences.size,
