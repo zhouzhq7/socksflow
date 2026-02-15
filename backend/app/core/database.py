@@ -43,11 +43,25 @@ class Base(DeclarativeBase):
 
 
 # 创建异步引擎
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.database_echo,
-    future=True,
-)
+# 根据数据库类型配置不同参数
+if "postgresql" in settings.database_url.lower():
+    # PostgreSQL 配置（生产环境）
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.database_echo,
+        future=True,
+        pool_size=5,
+        max_overflow=10,
+        pool_timeout=30,
+        pool_recycle=1800,
+    )
+else:
+    # SQLite 配置（开发环境）
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.database_echo,
+        future=True,
+    )
 
 # 创建异步会话工厂
 AsyncSessionLocal = async_sessionmaker(

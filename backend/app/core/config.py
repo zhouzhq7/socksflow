@@ -46,7 +46,12 @@ class Settings(BaseSettings):
     
     # 前端 URL（用于 CORS）
     frontend_url: str = "http://localhost:3000"
-    allowed_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    allowed_origins: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://socksflow.vercel.app",
+        "https://*.vercel.app",  # 允许所有 Vercel 预览域名
+    ]
     
     # 支付配置
     alipay_app_id: Optional[str] = None
