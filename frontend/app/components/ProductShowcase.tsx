@@ -142,20 +142,25 @@ export default function ProductShowcase() {
   const handleBoxSelect = (box: typeof boxContents[0], idx: number) => {
     if (isProcessing) return;
     
+    setIsProcessing(true);
     setSelectedBox(idx);
     
     // 延迟跳转，让用户看到选中效果
     setTimeout(() => {
       if (!isAuthenticated) {
-        // 未登录：跳转到登录页，并带上订阅方案信息
-        router.push(`/auth/login?redirect=/dashboard/subscriptions&plan=${idx}`);
+        // 未登录：跳转到登录页，并带上订阅方案信息（登录后需要创建订阅）
+        const redirectUrl = encodeURIComponent(`/dashboard/subscriptions?create=true&plan=${idx}`);
+        router.push(`/auth/login?redirect=${redirectUrl}`);
       } else if (!isProfileComplete) {
         // 已登录但信息不完整：跳转到信息完善页面
-        router.push(`/complete-profile?return=/dashboard/subscriptions?create=true&plan=${idx}`);
+        // 完善信息后需要回到订阅页面并创建订阅
+        const returnUrl = encodeURIComponent(`/dashboard/subscriptions?create=true&plan=${idx}`);
+        router.push(`/complete-profile?return=${returnUrl}`);
       } else {
         // 已登录且信息完整：跳转到订阅管理页面
         router.push(`/dashboard/subscriptions?create=true&plan=${idx}`);
       }
+      setIsProcessing(false);
     }, 400);
   };
 
@@ -697,15 +702,6 @@ function TestimonialCarousel() {
           />
         </div>
 
-        {/* 自动播放状态指示 */}
-        <div className="flex items-center justify-center gap-2 mt-4 text-sm text-slate-400">
-          <div 
-            className={`w-2 h-2 rounded-full transition-colors ${
-              isAutoPlaying ? "bg-green-400" : "bg-slate-300"
-            }`} 
-          />
-          {isAutoPlaying ? "自动播放中" : "已暂停"}
-        </div>
       </div>
     </div>
   );

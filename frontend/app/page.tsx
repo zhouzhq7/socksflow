@@ -1,9 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import { Footprints, Package, Truck, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
 import ProductShowcase from "./components/ProductShowcase";
 import AuthNav from "./components/AuthNav";
+import { useAuthStore } from "@/lib/store/authStore";
 
 export default function Home() {
+  const [isClient, setIsClient] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Header */}
@@ -96,22 +107,24 @@ export default function Home() {
         <ProductShowcase />
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-indigo-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-6">
-            准备好开始您的袜子订阅之旅了吗？
-          </h2>
-          <p className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto">
-            立即注册，享受首月优惠，让 SockFlow 为您带来全新的袜子体验
-          </p>
-          <Link href="/auth/register">
-            <button className="bg-white text-indigo-600 px-8 py-4 rounded-full text-lg font-medium hover:bg-indigo-50 transition-colors">
-              免费注册
-            </button>
-          </Link>
-        </div>
-      </section>
+      {/* CTA Section - 仅对未登录用户显示 */}
+      {isClient && !isAuthenticated && (
+        <section className="py-20 bg-indigo-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold text-white mb-6">
+              准备好开始您的袜子订阅之旅了吗？
+            </h2>
+            <p className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto">
+              立即注册，享受首月优惠，让 SockFlow 为您带来全新的袜子体验
+            </p>
+            <Link href="/auth/register">
+              <button className="bg-white text-indigo-600 px-8 py-4 rounded-full text-lg font-medium hover:bg-indigo-50 transition-colors">
+                免费注册
+              </button>
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 py-12">

@@ -173,7 +173,7 @@ export default function SubscriptionsPage() {
 
   // 检查是否有活跃订阅
   const hasActiveSubscription = subscriptions.some(
-    (sub) => sub.status === "active" || sub.status === "paused"
+    (sub) => sub?.status === "active" || sub?.status === "paused"
   );
 
   // 如果有create参数，打开创建弹窗
@@ -336,7 +336,7 @@ export default function SubscriptionsPage() {
 
   // 获取活跃订阅
   const activeSubscription = subscriptions.find(
-    (sub) => sub.status === "active" || sub.status === "paused"
+    (sub) => sub?.status === "active" || sub?.status === "paused"
   );
 
   return (
