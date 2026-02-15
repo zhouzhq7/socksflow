@@ -1,29 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "name": "socksflow-frontend",
   "framework": "nextjs",
   
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   
-  "regions": [
-    "sin1",
-    "hkg1",
-    "icn1",
-    "sfo1",
-    "iad1"
-  ],
-  
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@socksflow_api_url"
-  },
-  
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://socksflow-api.up.railway.app/api/:path*"
+      "destination": "https://socksflow-api-production.up.railway.app/api/:path*"
     }
   ],
   
