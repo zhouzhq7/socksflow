@@ -23,7 +23,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-backend-url.up.railway.app/api/:path*"
+      "destination": "https://socksflow-api.up.railway.app/api/:path*"
     }
   ],
   
