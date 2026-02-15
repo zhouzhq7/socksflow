@@ -1,0 +1,63 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "name": "socksflow-frontend",
+  "framework": "nextjs",
+  
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  
+  "regions": [
+    "sin1",
+    "hkg1",
+    "icn1",
+    "sfo1",
+    "iad1"
+  ],
+  
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@socksflow_api_url"
+  },
+  
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://your-backend-url.railway.app/api/:path*"
+    }
+  ],
+  
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  
+  "github": {
+    "enabled": true,
+    "autoJobCancelation": true
+  }
+}
