@@ -1,4 +1,4 @@
-# 🧦 SockFlow - 智能袜子订阅服务
+# 🧦 SocksFlow - 智能袜子订阅服务
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15+-000000?style=flat-square&logo=next.js)](https://nextjs.org)
@@ -236,10 +236,10 @@ Authorization: Bearer <your-access-token>
 
 ## 📄 许可证
 
-[MIT](LICENSE) © SockFlow Team
+[MIT](LICENSE) © SocksFlow Team
 
 ---
 
 <div align="center">
-  <sub>Made with ❤️ by SockFlow Team</sub>
+  <sub>Made with ❤️ by SocksFlow Team</sub>
 </div>

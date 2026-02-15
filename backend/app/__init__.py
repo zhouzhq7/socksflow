@@ -1,2 +1,2 @@
-"""SockFlow 后端 API"""
+"""SocksFlow 后端 API"""
 __version__ = "1.0.0"

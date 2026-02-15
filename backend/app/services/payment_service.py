@@ -167,7 +167,7 @@ class PaymentService:
         order_string = alipay.api_alipay_trade_page_pay(
             out_trade_no=payment.payment_no,
             total_amount=str(order.total_amount),
-            subject=f"SockFlow 订单 #{order.order_number}",
+            subject=f"SocksFlow 订单 #{order.order_number}",
             return_url=return_url or f"{settings.frontend_url}/payment/success",
             notify_url=f"{settings.frontend_url}/api/v1/payments/callback"
         )

@@ -35,7 +35,7 @@
 - 已完成测试用例 1（已登录状态）
 
 ### 测试步骤
-1. 在 Dashboard 页面点击 SockFlow Logo
+1. 在 Dashboard 页面点击 SocksFlow Logo
 2. 观察导航栏变化
 
 ### 期望结果

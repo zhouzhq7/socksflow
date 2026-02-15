@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "登录/注册 - SockFlow",
-  description: "登录或注册 SockFlow 账号，开始您的智能袜子订阅服务",
+  title: "登录/注册 - SocksFlow",
+  description: "登录或注册 SocksFlow 账号，开始您的智能袜子订阅服务",
 };
 
 export default function AuthLayout({

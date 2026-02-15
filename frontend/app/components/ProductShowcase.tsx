@@ -584,7 +584,7 @@ const testimonials = [
     name: "张先生",
     role: "订阅用户 · 6个月",
     avatar: "Z",
-    content: "以前总是找不到配对的袜子，现在每个月都有新袜子送到，质量还特别好！ SockFlow 彻底改变了我对袜子的认知。",
+    content: "以前总是找不到配对的袜子，现在每个月都有新袜子送到，质量还特别好！ SocksFlow 彻底改变了我对袜子的认知。",
     rating: 5,
   },
   {
@@ -616,7 +616,7 @@ const testimonials = [
     name: "刘先生",
     role: "订阅用户 · 2年",
     avatar: "L",
-    content: "从最开始的怀疑到现在的铁杆粉丝，SockFlow 的品质一直很稳定。推荐给所有懒人，再也不用担心袜子不够穿了！",
+    content: "从最开始的怀疑到现在的铁杆粉丝，SocksFlow 的品质一直很稳定。推荐给所有懒人，再也不用担心袜子不够穿了！",
     rating: 5,
   },
 ];

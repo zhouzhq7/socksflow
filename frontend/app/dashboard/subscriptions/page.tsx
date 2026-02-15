@@ -385,7 +385,7 @@ export default function SubscriptionsPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold text-slate-900">订阅管理</h1>
-          <p className="text-slate-500">管理您的 SockFlow 订阅方案</p>
+          <p className="text-slate-500">管理您的 SocksFlow 订阅方案</p>
         </div>
         <Button 
           className="bg-amber-600 hover:bg-amber-700"

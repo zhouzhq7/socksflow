@@ -4,11 +4,11 @@ services:
   # PostgreSQL 数据库
   postgres:
     image: postgres:16-alpine
-    container_name: sockflow_postgres
+    container_name: socksflow_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: sockflow
+      POSTGRES_DB: socksflow
     ports:
       - "5432:5432"
     volumes:
@@ -19,12 +19,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - sockflow_network
+      - socksflow_network
 
   # Redis 缓存
   redis:
     image: redis:7-alpine
-    container_name: sockflow_redis
+    container_name: socksflow_redis
     ports:
       - "6379:6379"
     volumes:
@@ -35,16 +35,16 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - sockflow_network
+      - socksflow_network
 
   # 后端 API 服务
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: sockflow_backend
+    container_name: socksflow_backend
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/sockflow
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/socksflow
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
@@ -63,16 +63,16 @@ services:
         condition: service_healthy
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
-      - sockflow_network
+      - socksflow_network
 
   # Celery Worker
   celery_worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: sockflow_celery
+    container_name: socksflow_celery
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/sockflow
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/socksflow
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
@@ -85,14 +85,14 @@ services:
       - redis
     command: celery -A celery_tasks worker --loglevel=info
     networks:
-      - sockflow_network
+      - socksflow_network
 
   # 前端 Next.js 服务
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: sockflow_frontend
+    container_name: socksflow_frontend
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
     ports:
@@ -104,12 +104,12 @@ services:
       - backend
     command: npm run dev
     networks:
-      - sockflow_network
+      - socksflow_network
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  sockflow_network:
+  socksflow_network:
     driver: bridge

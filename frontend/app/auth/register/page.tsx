@@ -169,11 +169,11 @@ export default function RegisterPage() {
         <div className="flex justify-center mb-4">
           <div className="flex items-center gap-2">
             <Footprints className="h-8 w-8 text-amber-500" />
-            <span className="text-xl font-bold text-slate-900">SockFlow</span>
+            <span className="text-xl font-bold text-slate-900">SocksFlow</span>
           </div>
         </div>
         <CardTitle className="text-2xl font-bold text-slate-900">创建账号</CardTitle>
-        <CardDescription className="text-slate-500">注册 SockFlow 账号，开启智能袜子订阅之旅</CardDescription>
+        <CardDescription className="text-slate-500">注册 SocksFlow 账号，开启智能袜子订阅之旅</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">

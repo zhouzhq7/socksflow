@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SockFlow - 智能袜子订阅服务",
+  title: "SocksFlow - 智能袜子订阅服务",
   description: "让每个人都能轻松拥有舒适、时尚、合脚的袜子，告别袜子失踪的烦恼",
 };
 

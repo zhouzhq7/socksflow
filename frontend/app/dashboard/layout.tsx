@@ -177,7 +177,7 @@ export default function DashboardLayout({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600">
               <Footprints className="h-5 w-5 text-white" />
             </div>
-            <span className="text-lg font-bold text-slate-900">SockFlow</span>
+            <span className="text-lg font-bold text-slate-900">SocksFlow</span>
           </Link>
         </div>
 
@@ -232,7 +232,7 @@ export default function DashboardLayout({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600">
               <Footprints className="h-5 w-5 text-white" />
             </div>
-            <span className="text-lg font-bold text-slate-900">SockFlow</span>
+            <span className="text-lg font-bold text-slate-900">SocksFlow</span>
           </Link>
 
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -253,7 +253,7 @@ export default function DashboardLayout({
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600">
                       <Footprints className="h-5 w-5 text-white" />
                     </div>
-                    <span className="text-lg font-bold text-slate-900">SockFlow</span>
+                    <span className="text-lg font-bold text-slate-900">SocksFlow</span>
                   </Link>
                 </div>
 

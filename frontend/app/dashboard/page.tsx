@@ -114,7 +114,7 @@ export default function DashboardPage() {
           欢迎回来，{user?.name || "用户"}！
         </h1>
         <p className="text-slate-500">
-          这是您的 SockFlow 控制中心，在这里管理您的订阅和订单。
+          这是您的 SocksFlow 控制中心，在这里管理您的订阅和订单。
         </p>
       </div>
 

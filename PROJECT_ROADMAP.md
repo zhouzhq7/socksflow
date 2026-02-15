@@ -1,4 +1,4 @@
-# 🧦 SockFlow 完整功能开发路线图
+# 🧦 SocksFlow 完整功能开发路线图
 
 ## 当前状态
 - ✅ 后端基础框架（FastAPI + SQLite）

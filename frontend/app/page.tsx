@@ -22,7 +22,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Footprints className="h-8 w-8 text-indigo-600" />
-            <span className="text-xl font-bold text-slate-900">SockFlow</span>
+            <span className="text-xl font-bold text-slate-900">SocksFlow</span>
           </Link>
           <nav className="flex items-center gap-6">
             <Link
@@ -80,7 +80,7 @@ export default function Home() {
       <section id="features" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-slate-900 mb-16">
-            为什么选择 SockFlow？
+            为什么选择 SocksFlow？
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard
@@ -115,7 +115,7 @@ export default function Home() {
               准备好开始您的袜子订阅之旅了吗？
             </h2>
             <p className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto">
-              立即注册，享受首月优惠，让 SockFlow 为您带来全新的袜子体验
+              立即注册，享受首月优惠，让 SocksFlow 为您带来全新的袜子体验
             </p>
             <Link href="/auth/register">
               <button className="bg-white text-indigo-600 px-8 py-4 rounded-full text-lg font-medium hover:bg-indigo-50 transition-colors">
@@ -132,9 +132,9 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Footprints className="h-6 w-6 text-indigo-400" />
-              <span className="text-white font-semibold">SockFlow</span>
+              <span className="text-white font-semibold">SocksFlow</span>
             </div>
-            <p className="text-sm">© 2026 SockFlow. All rights reserved.</p>
+            <p className="text-sm">© 2026 SocksFlow. All rights reserved.</p>
           </div>
         </div>
       </footer>

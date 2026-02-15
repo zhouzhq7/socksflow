@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     
     # 应用基础配置
     app_name: str = "袜子订阅服务"
-    app_description: str = "SockFlow API - 智能袜子订阅平台"
+    app_description: str = "SocksFlow API - 智能袜子订阅平台"
     app_version: str = "1.0.0"
     debug: bool = False
     
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24 * 7  # 7天
     
     # 数据库配置 (SQLite)
-    database_url: str = "sqlite+aiosqlite:///./sockflow.db"
+    database_url: str = "sqlite+aiosqlite:///./socksflow.db"
     database_echo: bool = False
     
     # Redis 配置

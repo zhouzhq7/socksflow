@@ -130,7 +130,7 @@ export default function LoginPage() {
         <div className="flex justify-center mb-4">
           <div className="flex items-center gap-2">
             <Footprints className="h-8 w-8 text-amber-500" />
-            <span className="text-xl font-bold text-slate-900">SockFlow</span>
+            <span className="text-xl font-bold text-slate-900">SocksFlow</span>
           </div>
         </div>
         <CardTitle className="text-2xl font-bold text-slate-900">欢迎回来</CardTitle>

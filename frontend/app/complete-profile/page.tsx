@@ -186,7 +186,7 @@ function CompleteProfileContent() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <Footprints className="h-8 w-8 text-amber-600" />
-            <span className="text-xl font-bold text-slate-900">SockFlow</span>
+            <span className="text-xl font-bold text-slate-900">SocksFlow</span>
           </Link>
         </div>
 

@@ -14,7 +14,7 @@ from app.core import Base, get_db
 from app.main import app
 
 # 测试数据库 URL (使用 SQLite)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./sockflow_test.db"
+TEST_DATABASE_URL = "sqlite+aiosqlite:///./socksflow_test.db"
 
 # 创建测试引擎
 engine = create_async_engine(TEST_DATABASE_URL, echo=False)
