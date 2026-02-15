@@ -15,6 +15,8 @@ import {
   Clock,
   Calendar,
   Sparkles,
+  MapPin,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,8 @@ import {
   Subscription,
   DeliveryPreferences,
 } from "@/lib/store/subscriptionStore";
+import { addressApi, Address } from "@/lib/api";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // 状态标签配置
 const statusConfig: Record<
@@ -141,6 +145,11 @@ export default function SubscriptionsPage() {
     frequency: "monthly",
     size: "M",
   });
+  
+  // 地址列表状态
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   // 加载订阅列表 - 延迟执行等待 hydration 和认证就绪
   useEffect(() => {
@@ -170,17 +179,38 @@ export default function SubscriptionsPage() {
   // 如果有create参数，打开创建弹窗
   useEffect(() => {
     if (createParam === "true") {
-      // 如果已有活跃订阅，不打开创建弹窗
-      if (hasActiveSubscription) {
-        return;
-      }
       const planIdx = planParam ? parseInt(planParam, 10) : 0;
       if (!isNaN(planIdx) && planIdx >= 0 && planIdx < planConfigs.length) {
         setSelectedPlan(planIdx);
       }
       setCreateOpen(true);
     }
-  }, [createParam, planParam, hasActiveSubscription]);
+  }, [createParam, planParam]);
+
+  // 加载地址列表
+  useEffect(() => {
+    if (createOpen) {
+      const loadAddresses = async () => {
+        setLoadingAddresses(true);
+        try {
+          const response = await addressApi.getAddresses();
+          setAddresses(response.items);
+          // 自动选择默认地址
+          const defaultAddress = response.items.find(addr => addr.is_default);
+          if (defaultAddress) {
+            setSelectedAddressId(defaultAddress.id);
+          } else if (response.items.length > 0) {
+            setSelectedAddressId(response.items[0].id);
+          }
+        } catch (error) {
+          console.error("加载地址失败:", error);
+        } finally {
+          setLoadingAddresses(false);
+        }
+      };
+      loadAddresses();
+    }
+  }, [createOpen]);
 
   // 展开/折叠订阅详情
   const toggleExpand = async (subscription: Subscription) => {
@@ -253,9 +283,15 @@ export default function SubscriptionsPage() {
   const handleCreateSubscription = async () => {
     setCreateError(null);
     
-    // 再次检查是否已有活跃订阅
-    if (hasActiveSubscription) {
-      setCreateError("您已有活跃订阅，无法创建新订阅");
+    // 检查是否选择了地址
+    if (!selectedAddressId) {
+      setCreateError("请选择配送地址");
+      return;
+    }
+    
+    const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+    if (!selectedAddress) {
+      setCreateError("地址信息无效，请重新选择");
       return;
     }
     
@@ -269,13 +305,13 @@ export default function SubscriptionsPage() {
       plan_code: plan.code,
       delivery_frequency: frequency,
       shipping_address: {
-        name: "默认地址",
-        phone: "13800000000",
-        address: "待完善详细地址",
-        city: "北京市",
-        province: "北京市",
-        district: "朝阳区",
-        zip_code: "100000",
+        name: selectedAddress.name,
+        phone: selectedAddress.phone,
+        address: selectedAddress.address,
+        city: selectedAddress.city,
+        province: selectedAddress.province,
+        district: selectedAddress.district,
+        zip_code: selectedAddress.zip_code || "",
       },
       style_preferences: {
         size: createPreferences.size,
@@ -306,9 +342,18 @@ export default function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-slate-900">订阅管理</h1>
-        <p className="text-slate-500">管理您的 SockFlow 订阅方案</p>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold text-slate-900">订阅管理</h1>
+          <p className="text-slate-500">管理您的 SockFlow 订阅方案</p>
+        </div>
+        <Button 
+          className="bg-amber-600 hover:bg-amber-700"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          创建订阅
+        </Button>
       </div>
 
       {/* 活跃订阅提示 */}
@@ -515,30 +560,6 @@ export default function SubscriptionsPage() {
             );
           })}
         </div>
-      ) : hasActiveSubscription ? (
-        /* 已有活跃订阅时的提示 */
-        <Card className="border-dashed border-amber-200 bg-amber-50/30">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-              <Package className="h-8 w-8 text-amber-500" />
-            </div>
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">您已有活跃订阅</h3>
-            <p className="mb-6 max-w-md text-center text-sm text-slate-500">
-              您当前有一个进行中的订阅方案。如需更换其他方案，请先取消现有订阅后再创建新订阅。
-            </p>
-            <Button 
-              variant="outline"
-              onClick={() => {
-                // 展开活跃订阅详情
-                if (activeSubscription) {
-                  setExpandedId(activeSubscription.id);
-                }
-              }}
-            >
-              查看当前订阅
-            </Button>
-          </CardContent>
-        </Card>
       ) : (
         /* 真正没有订阅时的提示 */
         <Card className="border-dashed">
@@ -576,16 +597,6 @@ export default function SubscriptionsPage() {
             <Alert variant="destructive" className="mt-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{createError}</AlertDescription>
-            </Alert>
-          )}
-          
-          {/* 已有订阅提示 */}
-          {hasActiveSubscription && (
-            <Alert className="mt-4 bg-amber-50 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">
-                您已有活跃订阅，如需更换方案请先取消现有订阅
-              </AlertDescription>
             </Alert>
           )}
           
@@ -661,6 +672,74 @@ export default function SubscriptionsPage() {
                   <SelectItem value="XL">XL (44-46)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* 配送地址 */}
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <Label>配送地址</Label>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="h-auto p-0 text-amber-600"
+                  onClick={() => {
+                    setCreateOpen(false);
+                    window.location.href = "/dashboard/addresses";
+                  }}
+                >
+                  <MapPin className="mr-1 h-3 w-3" />
+                  管理地址
+                </Button>
+              </div>
+              
+              {loadingAddresses ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : addresses.length === 0 ? (
+                <Alert className="bg-amber-50 border-amber-200">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
+                    您还没有添加地址，请先添加地址后再创建订阅
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <RadioGroup
+                  value={selectedAddressId?.toString() || ""}
+                  onValueChange={(value) => setSelectedAddressId(parseInt(value))}
+                  className="grid gap-3"
+                >
+                  {addresses.map((address) => (
+                    <div key={address.id} className="relative">
+                      <RadioGroupItem
+                        value={address.id.toString()}
+                        id={`address-${address.id}`}
+                        className="peer sr-only"
+                      />
+                      <Label
+                        htmlFor={`address-${address.id}`}
+                        className="flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all hover:bg-slate-50 peer-data-[state=checked]:border-amber-500 peer-data-[state=checked]:bg-amber-50"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-900">{address.name}</span>
+                            <span className="text-slate-500">{address.phone}</span>
+                            {address.is_default && (
+                              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">默认</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-600 mt-1">
+                            {address.province} {address.city} {address.district} {address.address}
+                          </p>
+                        </div>
+                        {selectedAddressId === address.id && (
+                          <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                        )}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              )}
             </div>
 
             {/* 备注 */}

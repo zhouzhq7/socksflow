@@ -80,11 +80,6 @@ class SubscriptionService:
         if plan_code not in PLAN_CONFIG:
             raise ValueError(f"无效的计划代码: {plan_code}")
         
-        # 检查用户是否已有活跃订阅
-        existing = await self.get_active_by_user(user_id)
-        if existing:
-            raise ValueError("用户已有活跃订阅，请先取消现有订阅")
-        
         plan = PLAN_CONFIG[plan_code]
         
         # 计算订阅周期
