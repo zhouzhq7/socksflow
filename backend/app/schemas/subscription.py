@@ -2,11 +2,12 @@
 订阅相关 Pydantic Schema
 """
 import enum
+import re
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class SubscriptionPlan(str, enum.Enum):
@@ -65,6 +66,21 @@ class SubscriptionCreate(BaseModel):
     auto_renew: bool = Field(default=True, description="是否自动续费")
     size_profile_id: Optional[int] = Field(None, description="尺码档案ID")
 
+    @field_validator('shipping_address')
+    @classmethod
+    def validate_shipping_address(cls, v):
+        required_fields = ['province', 'city', 'district', 'address', 'name', 'phone']
+        missing = [f for f in required_fields if not v.get(f)]
+        if missing:
+            raise ValueError(f"地址缺少必填字段: {', '.join(missing)}")
+        
+        # Phone validation
+        phone = v.get('phone', '')
+        if not re.match(r'^1[3-9]\d{9}$', phone):
+            raise ValueError("收件人电话格式不正确")
+        
+        return v
+
 
 class SubscriptionUpdate(BaseModel):
     """更新订阅请求"""
@@ -122,6 +138,11 @@ class PlanInfo(BaseModel):
 class PlanListResponse(BaseModel):
     """计划列表响应"""
     plans: list[PlanInfo]
+
+
+class MessageResponse(BaseModel):
+    """通用消息响应"""
+    message: str
 
 
 # 导入 OrderResponse 用于类型引用

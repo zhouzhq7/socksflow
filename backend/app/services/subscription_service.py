@@ -73,7 +73,7 @@ class SubscriptionService:
             Subscription: 创建的订阅对象
         
         Raises:
-            ValueError: 计划代码无效或用户已有活跃订阅
+            ValueError: 计划代码无效
         """
         # 验证计划代码
         plan_code = data.plan_code.lower()
@@ -289,3 +289,18 @@ class SubscriptionService:
             "subtotal": float(plan["price_monthly"]),
             "description": f"包含每月{plan['socks_per_month']}双精选袜子"
         }]
+    
+    async def delete(self, user_id: int, subscription_id: int) -> None:
+        """删除订阅（仅限非活跃状态）"""
+        subscription = await self.get_by_id(subscription_id)
+        if not subscription:
+            raise ValueError("订阅不存在")
+        if subscription.user_id != user_id:
+            raise ValueError("无权操作此订阅")
+        
+        # 只能删除已取消或过期的订阅
+        if subscription.status not in [SubscriptionStatus.CANCELLED, SubscriptionStatus.EXPIRED]:
+            raise ValueError("只能删除已取消或过期的订阅")
+        
+        await self.db.delete(subscription)
+        await self.db.commit()

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   Package,
   Play,
@@ -17,6 +18,7 @@ import {
   Sparkles,
   MapPin,
   Check,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,12 +90,12 @@ const statusConfig: Record<
 
 // 频率选项
 const frequencyOptions = [
-  { value: "1", label: "每月配送" },
-  { value: "2", label: "双月配送" },
-  { value: "3", label: "季度配送" },
+  { value: "monthly", label: "每月配送" },
+  { value: "bimonthly", label: "双月配送" },
+  { value: "quarterly", label: "季度配送" },
 ];
 
-// 配送频率映射
+// 配送频率映射 (映射到月数间隔)
 const frequencyMap: Record<string, number> = {
   monthly: 1,
   bimonthly: 2,
@@ -102,9 +104,9 @@ const frequencyMap: Record<string, number> = {
 
 // 订阅方案配置
 const planConfigs = [
-  { code: "basic", name: "基础盒", price: 29, pairs: 2, description: "每月2双基础棉袜" },
-  { code: "standard", name: "标准盒", price: 49, pairs: 3, description: "每月3双精选袜子组合" },
-  { code: "premium", name: "高级盒", price: 89, pairs: 5, description: "每月5双高端袜子组合" },
+  { code: "basic", name: "基础版", price: 29.90, pairs: 2, description: "每月2双精选袜子" },
+  { code: "standard", name: "标准版", price: 49.90, pairs: 4, description: "每月4双精选袜子" },
+  { code: "premium", name: "高级版", price: 79.90, pairs: 6, description: "每月6双精选袜子" },
 ];
 
 export default function SubscriptionsPage() {
@@ -117,14 +119,17 @@ export default function SubscriptionsPage() {
     subscriptions,
     currentSubscription,
     loading,
+    error,
     fetchSubscriptions,
     fetchSubscription,
     createSubscription,
     pauseSubscription,
     resumeSubscription,
     cancelSubscription,
+    deleteSubscription,
     updatePreferences,
     clearCurrentSubscription,
+    clearError,
   } = useSubscriptionStore();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -133,7 +138,7 @@ export default function SubscriptionsPage() {
   const [selectedPlan, setSelectedPlan] = useState(0);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
-    type: "pause" | "resume" | "cancel";
+    type: "pause" | "resume" | "cancel" | "delete";
     subscription: Subscription | null;
   }>({ type: "pause", subscription: null });
 
@@ -232,14 +237,23 @@ export default function SubscriptionsPage() {
 
   // 保存偏好设置
   const savePreferences = async () => {
-    if (selectedSubscription) {
+    if (!selectedSubscription) return;
+    
+    try {
       await updatePreferences(selectedSubscription.id, preferences);
+      toast.success("偏好设置已保存");
+      // 强制刷新订阅列表以确保数据同步
+      await fetchSubscriptions();
       setPreferencesOpen(false);
       setSelectedSubscription(null);
+    } catch (error: any) {
+      console.error("保存偏好设置失败:", error);
+      const message = error?.response?.data?.detail || error?.message || "保存失败，请稍后重试";
+      toast.error(message);
     }
   };
 
-  // 处理暂停/恢复/取消操作
+  // 处理暂停/恢复/取消/删除操作
   const handleAction = async () => {
     if (!confirmAction.subscription) return;
 
@@ -247,13 +261,21 @@ export default function SubscriptionsPage() {
     try {
       if (type === "pause") {
         await pauseSubscription(subscription.id);
+        toast.success("订阅已暂停");
       } else if (type === "resume") {
         await resumeSubscription(subscription.id);
+        toast.success("订阅已恢复");
       } else if (type === "cancel") {
         await cancelSubscription(subscription.id);
+        toast.success("订阅已取消");
+      } else if (type === "delete") {
+        await deleteSubscription(subscription.id);
+        toast.success("订阅已删除");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("操作失败:", error);
+      const message = error?.response?.data?.detail || error?.message || "操作失败，请稍后重试";
+      toast.error(message);
     } finally {
       setConfirmAction({ type: "pause", subscription: null });
     }
@@ -271,6 +293,7 @@ export default function SubscriptionsPage() {
 
   // 格式化价格
   const formatPrice = (price: number, currency: string = "CNY") => {
+    if (typeof price !== "number" || isNaN(price)) return "-";
     return new Intl.NumberFormat("zh-CN", {
       style: "currency",
       currency: currency,
@@ -323,8 +346,12 @@ export default function SubscriptionsPage() {
     
     try {
       await createSubscription(subscriptionData.plan_code, subscriptionData);
+      // Close dialog and refresh subscriptions list
       setCreateOpen(false);
+      await fetchSubscriptions();
+      // Reset form state
       setCreatePreferences({ frequency: "monthly", size: "M" });
+      setSelectedAddressId(null);
       setCreateError(null);
     } catch (error) {
       // 处理创建订阅的错误
@@ -341,6 +368,19 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="space-y-6">
+      {/* 错误提示 */}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button variant="ghost" size="sm" onClick={clearError} className="h-auto py-1 px-2">
+              关闭
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* 页面标题 */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
@@ -552,6 +592,19 @@ export default function SubscriptionsPage() {
                             取消订阅
                           </Button>
                         </>
+                      )}
+                      {(subscription.status === "cancelled" || subscription.status === "expired") && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() =>
+                            setConfirmAction({ type: "delete", subscription })
+                          }
+                        >
+                          <Trash2 className="mr-1 h-4 w-4" />
+                          删除订阅
+                        </Button>
                       )}
                     </div>
                   </CardContent>
@@ -867,6 +920,7 @@ export default function SubscriptionsPage() {
               {confirmAction.type === "pause" && "确认暂停订阅？"}
               {confirmAction.type === "resume" && "确认恢复订阅？"}
               {confirmAction.type === "cancel" && "确认取消订阅？"}
+              {confirmAction.type === "delete" && "确认删除订阅？"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction.type === "pause" &&
@@ -875,6 +929,8 @@ export default function SubscriptionsPage() {
                 "恢复后，您的订阅将重新开始正常配送。"}
               {confirmAction.type === "cancel" &&
                 "取消后，您的订阅将在当前周期结束后终止。此操作不可撤销。"}
+              {confirmAction.type === "delete" &&
+                "删除后，此订阅记录将从您的账户中永久移除。此操作不可恢复。"}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -882,7 +938,7 @@ export default function SubscriptionsPage() {
             <AlertDialogAction
               onClick={handleAction}
               className={cn(
-                confirmAction.type === "cancel"
+                confirmAction.type === "cancel" || confirmAction.type === "delete"
                   ? "bg-red-600 hover:bg-red-700"
                   : "bg-indigo-600 hover:bg-indigo-700"
               )}

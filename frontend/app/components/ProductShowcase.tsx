@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, LogIn, AlertCircle, MapPin, User, Ruler } from "lucide-react";
-import { useAuthStore, isUserProfileComplete, getMissingProfileFields } from "@/lib/store/authStore";
+import { useAuthStore } from "@/lib/store/authStore";
+import { addressApi, Address } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -108,25 +109,25 @@ const products = [
 // 订阅盒展示数据
 const boxContents = [
   {
-    title: "基础盒",
+    title: "基础版",
     pairs: 2,
-    price: "¥29",
+    price: "¥29.90",
     items: ["基础棉袜", "日常休闲袜"],
     color: "from-blue-500 to-blue-600",
   },
   {
-    title: "标准盒",
-    pairs: 3,
-    price: "¥49",
-    items: ["运动袜", "商务袜", "休闲袜"],
+    title: "标准版",
+    pairs: 4,
+    price: "¥49.90",
+    items: ["运动袜", "商务袜", "休闲袜", "限量款"],
     color: "from-indigo-500 to-indigo-600",
     popular: true,
   },
   {
-    title: "高级盒",
-    pairs: 5,
-    price: "¥89",
-    items: ["美利奴羊毛袜", "专业运动袜", "商务袜", "休闲袜", "限量款"],
+    title: "高级版",
+    pairs: 6,
+    price: "¥79.90",
+    items: ["美利奴羊毛袜", "专业运动袜", "商务袜", "休闲袜", "限量款", "神秘惊喜款"],
     color: "from-purple-500 to-purple-600",
   },
 ];
@@ -140,10 +141,45 @@ export default function ProductShowcase() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [selectedPlanIndex, setSelectedPlanIndex] = useState<number | null>(null);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
   
-  // 检查用户是否已完成必要信息
-  const isProfileComplete = user ? isUserProfileComplete(user) : false;
-  const missingFields = user ? getMissingProfileFields(user) : [];
+  // 获取用户地址列表
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsLoadingAddresses(true);
+      addressApi.getAddresses()
+        .then((res) => {
+          setAddresses(res.items);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch addresses:", error);
+          setAddresses([]);
+        })
+        .finally(() => {
+          setIsLoadingAddresses(false);
+        });
+    } else {
+      setAddresses([]);
+    }
+  }, [isAuthenticated]);
+  
+  // 检查用户是否已完成必要信息（手机号 + 至少一个地址）
+  const isProfileComplete = !!(user?.phone && addresses.length > 0);
+  
+  // 获取缺失的必填信息
+  const getMissingFields = (): string[] => {
+    if (!user) return ["登录信息"];
+    
+    const missing: string[] = [];
+    
+    if (!user.phone) missing.push("手机号");
+    if (addresses.length === 0) missing.push("配送地址");
+    
+    return missing;
+  };
+  
+  const missingFields = getMissingFields();
 
   const filteredProducts =
     activeCategory === "all"

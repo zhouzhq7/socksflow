@@ -152,6 +152,15 @@ class PaymentService:
             provider=PaymentProvider.ALIPAY
         )
         
+        # 检查是否配置了支付宝（未配置时使用模拟支付）
+        if not settings.alipay_app_id:
+            # 模拟支付：直接标记为成功（仅用于开发测试）
+            await self.mark_as_success(payment, f"MOCK_{payment.payment_no}")
+            await self._update_order_status(payment.order_id)
+            # 返回一个模拟的成功URL
+            mock_url = f"{settings.frontend_url}/payment/success?out_trade_no={payment.payment_no}&mock=1"
+            return payment, mock_url
+        
         # 生成支付宝支付URL
         alipay = self._get_alipay_client()
         

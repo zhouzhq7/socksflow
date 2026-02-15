@@ -43,7 +43,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { orderApi } from "@/lib/api";
+import { orderApi, paymentApi } from "@/lib/api";
+import { toast } from "sonner";
 
 // 订单类型
 interface OrderItem {
@@ -124,8 +125,19 @@ export default function OrdersPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
 
-  // 加载订单列表 - 延迟执行等待 hydration 和认证就绪
+  // 加载订单列表
+  const fetchOrders = async () => {
+    try {
+      const response = await orderApi.getOrders();
+      setOrders(response.data || []);
+    } catch (error) {
+      console.error("加载订单失败:", error);
+    }
+  };
+
+  // 初始加载 - 延迟执行等待 hydration 和认证就绪
   useEffect(() => {
     const timer = setTimeout(() => {
       // 检查是否有 token
@@ -137,10 +149,7 @@ export default function OrdersPage() {
 
       const loadOrders = async () => {
         try {
-          const response = await orderApi.getOrders();
-          setOrders(response.data || []);
-        } catch (error) {
-          console.error("加载订单失败:", error);
+          await fetchOrders();
         } finally {
           setLoading(false);
         }
@@ -165,9 +174,33 @@ export default function OrdersPage() {
   };
 
   // 处理支付
-  const handlePay = (orderId: string) => {
-    // 跳转到支付页面或打开支付弹窗
-    console.log("支付订单:", orderId);
+  const handlePay = async (orderId: string) => {
+    try {
+      setPayingOrderId(orderId);
+      const response = await paymentApi.createPayment({
+        order_id: orderId,
+        payment_method: "alipay",
+      });
+      
+      // If Alipay SDK returns a form, submit it
+      if (response.data?.payment_form) {
+        const div = document.createElement("div");
+        div.innerHTML = response.data.payment_form;
+        document.body.appendChild(div);
+        const form = div.querySelector("form");
+        if (form) form.submit();
+      } else if (response.data?.pay_url) {
+        window.open(response.data.pay_url, "_blank");
+      } else {
+        toast.success("支付创建成功，请查看支付页面");
+        fetchOrders(); // Refresh orders
+      }
+    } catch (error: any) {
+      console.error("支付失败:", error);
+      toast.error(error?.response?.data?.detail || "支付失败，请重试");
+    } finally {
+      setPayingOrderId(null);
+    }
   };
 
   // 处理取消订单
@@ -261,9 +294,10 @@ export default function OrdersPage() {
                               size="sm"
                               className="bg-amber-600 hover:bg-amber-700"
                               onClick={() => handlePay(order.id)}
+                              disabled={payingOrderId === order.id}
                             >
                               <CreditCard className="mr-1 h-4 w-4" />
-                              去支付
+                              {payingOrderId === order.id ? "处理中..." : "去支付"}
                             </Button>
                           )}
                           {order.status === "pending" && (

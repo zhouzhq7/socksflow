@@ -67,6 +67,34 @@ async def create_address(
         )
 
 
+@router.get("/default", response_model=AddressResponse)
+async def get_default_address(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    获取当前用户的默认地址
+    
+    如果没有设置默认地址，返回第一个地址
+    """
+    address_service = AddressService(db)
+    address = await address_service.get_default_address(current_user.id)
+    
+    if not address:
+        # 尝试获取第一个地址
+        addresses = await address_service.get_by_user_id(current_user.id, limit=1)
+        if addresses:
+            address = addresses[0]
+    
+    if not address:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="暂无地址信息"
+        )
+    
+    return AddressResponse.model_validate(address)
+
+
 @router.get("/{address_id}", response_model=AddressResponse)
 async def get_address(
     address_id: int,
@@ -191,32 +219,4 @@ async def set_default_address(
         )
     
     await db.commit()
-    return AddressResponse.model_validate(address)
-
-
-@router.get("/default", response_model=AddressResponse)
-async def get_default_address(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    获取当前用户的默认地址
-    
-    如果没有设置默认地址，返回第一个地址
-    """
-    address_service = AddressService(db)
-    address = await address_service.get_default_address(current_user.id)
-    
-    if not address:
-        # 尝试获取第一个地址
-        addresses = await address_service.get_by_user_id(current_user.id, limit=1)
-        if addresses:
-            address = addresses[0]
-    
-    if not address:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="暂无地址信息"
-        )
-    
     return AddressResponse.model_validate(address)

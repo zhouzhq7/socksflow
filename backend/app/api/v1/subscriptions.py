@@ -17,6 +17,7 @@ from app.schemas.subscription import (
     SubscriptionWithPaymentResponse,
     PlanInfo,
     PlanListResponse,
+    MessageResponse,
     PLAN_CONFIG,
 )
 from app.services.subscription_service import SubscriptionService
@@ -82,7 +83,7 @@ async def create_subscription(
             months=1
         )
         
-        # 创建支付宝支付（如果SDK已安装）
+        # 创建支付宝支付（如果SDK已安装且配置正确）
         try:
             payment_service = PaymentService(db)
             payment, pay_url = await payment_service.create_alipay_payment(
@@ -95,9 +96,15 @@ async def create_subscription(
                 "payment_id": payment.id,
                 "payment_no": payment.payment_no
             }
-        except ImportError:
-            # 支付宝SDK未安装，继续但不创建支付
-            payment_params = None
+        except (ImportError, ValueError):
+            # 支付宝SDK未安装或未配置，使用模拟支付（开发测试模式）
+            # 订单会自动标记为已支付
+            payment_params = {
+                "pay_url": f"/payment/success?order_id={order.id}&mock=1",
+                "payment_id": None,
+                "payment_no": None,
+                "mock": True
+            }
         
         await db.commit()
         
@@ -113,12 +120,21 @@ async def create_subscription(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"创建订阅失败: {str(e)}"
-        )
+
+
+@router.delete("/{subscription_id}", response_model=MessageResponse)
+async def delete_subscription(
+    subscription_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """删除订阅（仅限取消或过期状态的订阅）"""
+    service = SubscriptionService(db)
+    try:
+        await service.delete(current_user.id, subscription_id)
+        return MessageResponse(message="订阅已删除")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("", response_model=List[SubscriptionResponse])
