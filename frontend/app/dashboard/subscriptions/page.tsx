@@ -386,11 +386,11 @@ export default function SubscriptionsPage() {
             </Card>
           ))}
         </div>
-      ) : subscriptions.length > 0 ? (
+      ) : subscriptions.filter(Boolean).length > 0 ? (
         <div className="space-y-4">
-          {subscriptions.map((subscription) => {
-            const isExpanded = expandedId === subscription.id;
-            const status = statusConfig[subscription.status];
+          {subscriptions.filter(Boolean).map((subscription) => {
+            const isExpanded = expandedId === subscription?.id;
+            const status = statusConfig[subscription?.status];
 
             return (
               <Card key={subscription.id} className={cn("overflow-hidden", isExpanded && "ring-2 ring-amber-100")}>

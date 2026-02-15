@@ -2,8 +2,17 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, LogIn, AlertCircle } from "lucide-react";
-import { useAuthStore, isUserProfileComplete } from "@/lib/store/authStore";
+import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, LogIn, AlertCircle, MapPin, User, Ruler } from "lucide-react";
+import { useAuthStore, isUserProfileComplete, getMissingProfileFields } from "@/lib/store/authStore";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 // 产品分类数据
 const categories = [
@@ -129,9 +138,12 @@ export default function ProductShowcase() {
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
   const [selectedBox, setSelectedBox] = useState<number | null>(1); // 默认选中标准版
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState<number | null>(null);
   
   // 检查用户是否已完成必要信息
   const isProfileComplete = user ? isUserProfileComplete(user) : false;
+  const missingFields = user ? getMissingProfileFields(user) : [];
 
   const filteredProducts =
     activeCategory === "all"
@@ -144,24 +156,30 @@ export default function ProductShowcase() {
     
     setIsProcessing(true);
     setSelectedBox(idx);
+    setSelectedPlanIndex(idx);
     
-    // 延迟跳转，让用户看到选中效果
+    // 延迟处理，让用户看到选中效果
     setTimeout(() => {
       if (!isAuthenticated) {
         // 未登录：跳转到登录页，并带上订阅方案信息（登录后需要创建订阅）
         const redirectUrl = encodeURIComponent(`/dashboard/subscriptions?create=true&plan=${idx}`);
         router.push(`/auth/login?redirect=${redirectUrl}`);
       } else if (!isProfileComplete) {
-        // 已登录但信息不完整：跳转到信息完善页面
-        // 完善信息后需要回到订阅页面并创建订阅
-        const returnUrl = encodeURIComponent(`/dashboard/subscriptions?create=true&plan=${idx}`);
-        router.push(`/complete-profile?return=${returnUrl}`);
+        // 已登录但信息不完整：显示提示弹窗
+        setShowProfileDialog(true);
+        setIsProcessing(false);
       } else {
         // 已登录且信息完整：跳转到订阅管理页面
         router.push(`/dashboard/subscriptions?create=true&plan=${idx}`);
       }
-      setIsProcessing(false);
     }, 400);
+  };
+  
+  // 处理去完善信息
+  const handleGoToCompleteProfile = () => {
+    if (selectedPlanIndex === null) return;
+    const returnUrl = encodeURIComponent(`/dashboard/subscriptions?create=true&plan=${selectedPlanIndex}`);
+    router.push(`/complete-profile?return=${returnUrl}`);
   };
 
   return (
@@ -339,14 +357,6 @@ export default function ProductShowcase() {
                   </div>
                 )}
 
-                {/* 信息不完整提示 */}
-                {isAuthenticated && !isProfileComplete && selectedBox === idx && (
-                  <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-medium px-3 py-1 rounded-full z-10 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    需完善信息
-                  </div>
-                )}
-
                 {/* 受欢迎标签 */}
                 {box.popular && (
                   <div className="absolute -top-3 left-4 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full z-10">
@@ -396,11 +406,7 @@ export default function ProductShowcase() {
                   }`}
                 >
                   {selectedBox === idx 
-                    ? (!isAuthenticated 
-                        ? "登录后订阅" 
-                        : !isProfileComplete 
-                          ? "完善信息后订阅"
-                          : "立即订阅")
+                    ? (!isAuthenticated ? "登录后订阅" : "立即订阅")
                     : "选择此方案"
                   }
                   <ArrowRight className={`h-4 w-4 transition-transform ${selectedBox === idx ? "" : "group-hover:translate-x-1"}`} />
@@ -430,11 +436,6 @@ export default function ProductShowcase() {
                     <LogIn className="h-5 w-5" />
                     登录后订阅
                   </>
-                ) : !isProfileComplete ? (
-                  <>
-                    <AlertCircle className="h-5 w-5" />
-                    完善信息后订阅
-                  </>
                 ) : (
                   <>
                     立即订阅
@@ -445,9 +446,7 @@ export default function ProductShowcase() {
               <p className="mt-3 text-slate-500 text-xs">
                 {!isAuthenticated 
                   ? "需要登录后才能创建订阅"
-                  : !isProfileComplete 
-                    ? "需要完善手机号、地址和尺码信息"
-                    : "点击上方按钮跳转到订阅确认页面"}
+                  : "点击上方按钮跳转到订阅确认页面"}
               </p>
             </div>
           )}
@@ -456,6 +455,65 @@ export default function ProductShowcase() {
         {/* 客户评价 - 轮播展示 */}
         <TestimonialCarousel />
       </div>
+      
+      {/* 信息不完善提示弹窗 */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              需要完善信息
+            </DialogTitle>
+            <DialogDescription>
+              创建订阅前，请先完善以下信息：
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="space-y-3">
+              {missingFields.includes("手机号") && (
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <User className="h-5 w-5 text-slate-400" />
+                  <div>
+                    <p className="font-medium text-slate-900">手机号码</p>
+                    <p className="text-sm text-slate-500">用于接收订单通知</p>
+                  </div>
+                </div>
+              )}
+              {missingFields.includes("配送地址") && (
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <MapPin className="h-5 w-5 text-slate-400" />
+                  <div>
+                    <p className="font-medium text-slate-900">配送地址</p>
+                    <p className="text-sm text-slate-500">用于配送袜子</p>
+                  </div>
+                </div>
+              )}
+              {missingFields.includes("尺码信息") && (
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <Ruler className="h-5 w-5 text-slate-400" />
+                  <div>
+                    <p className="font-medium text-slate-900">尺码信息</p>
+                    <p className="text-sm text-slate-500">用于匹配合适的袜子</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
+              稍后再说
+            </Button>
+            <Button 
+              className="bg-amber-600 hover:bg-amber-700"
+              onClick={handleGoToCompleteProfile}
+            >
+              去完善信息
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
