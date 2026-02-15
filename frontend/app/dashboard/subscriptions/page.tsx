@@ -298,6 +298,11 @@ export default function SubscriptionsPage() {
     }
   };
 
+  // 获取活跃订阅
+  const activeSubscription = subscriptions.find(
+    (sub) => sub.status === "active" || sub.status === "paused"
+  );
+
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
@@ -305,6 +310,24 @@ export default function SubscriptionsPage() {
         <h1 className="text-3xl font-bold text-slate-900">订阅管理</h1>
         <p className="text-slate-500">管理您的 SockFlow 订阅方案</p>
       </div>
+
+      {/* 活跃订阅提示 */}
+      {activeSubscription && (
+        <Alert className="bg-green-50 border-green-200">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <AlertDescription className="text-green-800 font-medium">
+              您当前有{activeSubscription.status === "active" ? "进行中" : "已暂停"}的订阅：
+              <span className="font-bold">{activeSubscription.planName}</span>
+              {activeSubscription.nextDeliveryDate && (
+                <span className="ml-2 text-green-700">
+                  下次配送 {formatDate(activeSubscription.nextDeliveryDate)}
+                </span>
+              )}
+            </AlertDescription>
+          </div>
+        </Alert>
+      )}
 
       {/* 订阅列表 */}
       {loading ? (
@@ -492,7 +515,32 @@ export default function SubscriptionsPage() {
             );
           })}
         </div>
+      ) : hasActiveSubscription ? (
+        /* 已有活跃订阅时的提示 */
+        <Card className="border-dashed border-amber-200 bg-amber-50/30">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+              <Package className="h-8 w-8 text-amber-500" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">您已有活跃订阅</h3>
+            <p className="mb-6 max-w-md text-center text-sm text-slate-500">
+              您当前有一个进行中的订阅方案。如需更换其他方案，请先取消现有订阅后再创建新订阅。
+            </p>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                // 展开活跃订阅详情
+                if (activeSubscription) {
+                  setExpandedId(activeSubscription.id);
+                }
+              }}
+            >
+              查看当前订阅
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
+        /* 真正没有订阅时的提示 */
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
