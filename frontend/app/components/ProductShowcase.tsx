@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, LogIn, AlertCircle, MapPin, User, Ruler } from "lucide-react";
+import { Footprints, Star, Check, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Quote, Package, Lock, AlertCircle, MapPin, User, Ruler } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { addressApi, Address } from "@/lib/api";
 import {
@@ -451,41 +451,7 @@ export default function ProductShowcase() {
             ))}
           </div>
 
-          {/* 选中提示和订阅按钮 */}
-          {selectedBox !== null && (
-            <div className="mt-8 text-center">
-              <p className="text-slate-400 text-sm mb-4">
-                已选择 <span className="text-amber-400 font-bold">{boxContents[selectedBox].title}</span>
-              </p>
-              <button
-                onClick={() => handleBoxSelect(boxContents[selectedBox], selectedBox)}
-                disabled={isProcessing}
-                className="inline-flex items-center gap-2 bg-amber-400 text-amber-900 px-8 py-3 rounded-full font-bold text-lg hover:bg-amber-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-400/20 hover:shadow-xl hover:shadow-amber-400/30 hover:scale-105"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-amber-900/30 border-t-amber-900 rounded-full animate-spin" />
-                    处理中...
-                  </>
-                ) : !isAuthenticated ? (
-                  <>
-                    <LogIn className="h-5 w-5" />
-                    登录后订阅
-                  </>
-                ) : (
-                  <>
-                    立即订阅
-                    <ArrowRight className="h-5 w-5" />
-                  </>
-                )}
-              </button>
-              <p className="mt-3 text-slate-500 text-xs">
-                {!isAuthenticated 
-                  ? "需要登录后才能创建订阅"
-                  : "点击上方按钮跳转到订阅确认页面"}
-              </p>
-            </div>
-          )}
+
         </div>
 
         {/* 客户评价 - 轮播展示 */}
@@ -655,148 +621,81 @@ const testimonials = [
   },
 ];
 
-// 评价轮播组件
+// 评价卡片组件
+function ReviewCard({ name, avatar, rating, content, role }: {
+  name: string;
+  avatar: string;
+  rating: number;
+  content: string;
+  role: string;
+}) {
+  return (
+    <div className="flex-shrink-0 w-[400px] mx-4 p-6 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-100 shadow-md hover:shadow-lg transition-shadow">
+      <div className="flex items-start gap-4">
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+          {avatar}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-semibold text-slate-900">{name}</span>
+            <div className="flex text-amber-400">
+              {[...Array(rating)].map((_, i) => (
+                <Star key={i} className="h-3 w-3 fill-amber-400" />
+              ))}
+            </div>
+          </div>
+          <p className="text-sm text-slate-500 mb-3">{role}</p>
+          <p className="text-slate-600 italic text-sm leading-relaxed line-clamp-4">
+            "{content}"
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 评价轮播组件 - Marquee 滚动效果
 function TestimonialCarousel() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [direction, setDirection] = useState<"left" | "right">("right");
-
-  const nextSlide = useCallback(() => {
-    setDirection("right");
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-  }, []);
-
-  const prevSlide = useCallback(() => {
-    setDirection("left");
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  }, []);
-
-  const goToSlide = (index: number) => {
-    setDirection(index > currentIndex ? "right" : "left");
-    setCurrentIndex(index);
-  };
-
-  // 自动轮播 - 每2秒切换一次
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 2000);
-
-    return () => clearInterval(timer);
-  }, [isAutoPlaying, nextSlide]);
-
-  // 暂停自动播放当用户交互时
-  const handleInteraction = () => {
-    setIsAutoPlaying(false);
-    // 5秒后恢复自动播放
-    setTimeout(() => setIsAutoPlaying(true), 5000);
-  };
-
-  const currentTestimonial = testimonials[currentIndex];
-
   return (
     <div className="mt-20">
       <h3 className="text-2xl font-bold text-center text-slate-900 mb-12">
         用户真实评价
       </h3>
-      
-      <div 
-        className="relative max-w-4xl mx-auto px-4"
-        onMouseEnter={() => setIsAutoPlaying(false)}
-        onMouseLeave={() => setIsAutoPlaying(true)}
-      >
-        {/* 主轮播区域 */}
-        <div className="relative overflow-hidden">
-          <div 
-            className="transition-all duration-500 ease-out transform"
-            style={{
-              opacity: 1,
-              transform: `translateX(0)`,
-            }}
-            key={currentTestimonial.id}
-          >
-            <div className="bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-lg">
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                {/* 左侧：头像和基本信息 */}
-                <div className="flex-shrink-0 text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mb-4 mx-auto">
-                    {currentTestimonial.avatar}
-                  </div>
-                  <div className="flex items-center justify-center gap-1 mb-2">
-                    {[...Array(currentTestimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                  <p className="font-medium text-slate-900">{currentTestimonial.name}</p>
-                  <p className="text-sm text-slate-500">{currentTestimonial.role}</p>
-                </div>
 
-                {/* 右侧：评价内容 */}
-                <div className="flex-1 text-center md:text-left">
-                  <Quote className="h-10 w-10 text-indigo-200 mb-4 mx-auto md:mx-0" />
-                  <p className="text-lg md:text-xl text-slate-700 leading-relaxed italic">
-                    "{currentTestimonial.content}"
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Marquee 滚动区域 */}
+      <div className="relative overflow-hidden group">
+        {/* 左侧渐变遮罩 */}
+        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+        {/* 右侧渐变遮罩 */}
+        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
-        {/* 左右箭头 */}
-        <button
-          onClick={() => {
-            handleInteraction();
-            prevSlide();
-          }}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 w-12 h-12 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:shadow-xl transition-all z-10"
-          aria-label="上一条评价"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button
-          onClick={() => {
-            handleInteraction();
-            nextSlide();
-          }}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 w-12 h-12 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:shadow-xl transition-all z-10"
-          aria-label="下一条评价"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
-
-        {/* 指示点 */}
-        <div className="flex items-center justify-center gap-2 mt-8">
-          {testimonials.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                handleInteraction();
-                goToSlide(index);
-              }}
-              className={`transition-all duration-300 rounded-full ${
-                index === currentIndex
-                  ? "w-8 h-2 bg-indigo-600"
-                  : "w-2 h-2 bg-slate-300 hover:bg-slate-400"
-              }`}
-              aria-label={`跳转到第 ${index + 1} 条评价`}
-            />
+        {/* 滚动容器 */}
+        <div className="flex animate-marquee group-hover:[animation-play-state:paused]">
+          {/* 第一组评价 */}
+          {testimonials.map((review, i) => (
+            <ReviewCard key={`a-${i}`} {...review} />
+          ))}
+          {/* 第二组评价（复制实现无缝滚动） */}
+          {testimonials.map((review, i) => (
+            <ReviewCard key={`b-${i}`} {...review} />
           ))}
         </div>
-
-        {/* 进度条 */}
-        <div className="mt-4 h-1 bg-slate-100 rounded-full overflow-hidden max-w-xs mx-auto">
-          <div 
-            className="h-full bg-indigo-600 transition-all duration-300 ease-linear"
-            style={{ 
-              width: `${((currentIndex + 1) / testimonials.length) * 100}%`,
-            }}
-          />
-        </div>
-
       </div>
+
+      {/* CSS 动画样式 */}
+      <style jsx>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .animate-marquee {
+          animation: marquee 40s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
